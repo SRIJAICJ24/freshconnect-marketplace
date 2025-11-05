@@ -12,17 +12,25 @@ bp = Blueprint('vendor', __name__, url_prefix='/vendor')
 @bp.route('/dashboard')
 @vendor_required
 def dashboard():
-    total_products = Product.query.filter_by(vendor_id=current_user.id).count()
-    total_orders = Order.query.filter_by(seller_id=current_user.id).count()
-    
-    recent_orders = Order.query.filter_by(
-        seller_id=current_user.id
-    ).order_by(Order.created_at.desc()).limit(5).all()
-    
-    return render_template('vendor/dashboard.html',
-                         total_products=total_products,
-                         total_orders=total_orders,
-                         recent_orders=recent_orders)
+    try:
+        total_products = Product.query.filter_by(vendor_id=current_user.id).count()
+        total_orders = Order.query.filter_by(seller_id=current_user.id).count()
+        
+        recent_orders = Order.query.filter_by(
+            seller_id=current_user.id
+        ).order_by(Order.created_at.desc()).limit(5).all()
+        
+        return render_template('vendor/dashboard.html',
+                             total_products=total_products,
+                             total_orders=total_orders,
+                             recent_orders=recent_orders)
+    except Exception as e:
+        print(f"❌ Vendor dashboard error for user {current_user.id}: {e}")
+        flash('Error loading dashboard. Please try again.', 'error')
+        return render_template('vendor/dashboard.html',
+                             total_products=0,
+                             total_orders=0,
+                             recent_orders=[])
 
 @bp.route('/add-product', methods=['GET', 'POST'])
 @vendor_required

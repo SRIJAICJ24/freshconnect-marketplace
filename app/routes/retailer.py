@@ -12,16 +12,30 @@ bp = Blueprint('retailer', __name__, url_prefix='/retailer')
 @bp.route('/dashboard')
 @retailer_required
 def dashboard():
-    credit = RetailerCredit.query.filter_by(retailer_id=current_user.id).first()
-    
-    if not credit:
-        credit = RetailerCredit(retailer_id=current_user.id)
-        db.session.add(credit)
-        db.session.commit()
-    
-    credit_info = CreditSystem.calculate_credit_score(current_user.id)
-    
-    return render_template('retailer/dashboard.html', credit=credit_info)
+    try:
+        credit = RetailerCredit.query.filter_by(retailer_id=current_user.id).first()
+        
+        if not credit:
+            credit = RetailerCredit(retailer_id=current_user.id)
+            db.session.add(credit)
+            db.session.commit()
+        
+        credit_info = CreditSystem.calculate_credit_score(current_user.id)
+        
+        return render_template('retailer/dashboard.html', credit=credit_info)
+    except Exception as e:
+        # Log the error and show user-friendly message
+        print(f"❌ Dashboard error for user {current_user.id}: {e}")
+        flash('Error loading dashboard. Please try again.', 'error')
+        # Provide minimal data to still show dashboard
+        default_credit = {
+            'score': 500,
+            'tier': 'silver',
+            'limit': 50000,
+            'available': 50000,
+            'utilized': 0
+        }
+        return render_template('retailer/dashboard.html', credit=default_credit)
 
 @bp.route('/browse')
 @retailer_required

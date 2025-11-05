@@ -64,3 +64,71 @@ def init_db():
             'status': 'error',
             'message': str(e)
         }), 500
+
+@bp.route('/seed-data')
+def seed_data():
+    """Add sample data for testing - Railway production"""
+    try:
+        from werkzeug.security import generate_password_hash
+        from app.models import Product
+        from datetime import datetime
+        
+        # Create sample vendor
+        vendor = User.query.filter_by(email='vendor@test.com').first()
+        if not vendor:
+            vendor = User(
+                name='Sample Vendor',
+                email='vendor@test.com',
+                password_hash=generate_password_hash('password123'),
+                user_type='vendor',
+                phone='9876543210',
+                address='Koyambedu Market',
+                city='Chennai'
+            )
+            db.session.add(vendor)
+            db.session.commit()
+        
+        # Create sample products
+        products_data = [
+            {'name': 'Tomatoes', 'category': 'vegetable', 'price': 40, 'stock': 100, 'moq': 5},
+            {'name': 'Onions', 'category': 'vegetable', 'price': 30, 'stock': 150, 'moq': 10},
+            {'name': 'Potatoes', 'category': 'vegetable', 'price': 25, 'stock': 200, 'moq': 10},
+            {'name': 'Carrots', 'category': 'vegetable', 'price': 35, 'stock': 80, 'moq': 5},
+            {'name': 'Apples', 'category': 'fruit', 'price': 120, 'stock': 60, 'moq': 5},
+            {'name': 'Bananas', 'category': 'fruit', 'price': 60, 'stock': 100, 'moq': 12},
+        ]
+        
+        added = 0
+        for data in products_data:
+            existing = Product.query.filter_by(name=data['name'], vendor_id=vendor.id).first()
+            if not existing:
+                product = Product(
+                    name=data['name'],
+                    description=f'Fresh {data["name"]} from Koyambedu',
+                    category=data['category'],
+                    price=data['price'],
+                    stock_quantity=data['stock'],
+                    moq=data['moq'],
+                    unit='kg',
+                    vendor_id=vendor.id,
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(product)
+                added += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Sample data added!',
+            'products_added': added,
+            'total_products': Product.query.count(),
+            'total_users': User.query.count()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
