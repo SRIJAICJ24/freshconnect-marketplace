@@ -3,160 +3,192 @@
 {% block title %}Voice Assistant - FreshConnect{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="mb-4">
-                <i class="fas fa-microphone-alt text-primary"></i> Voice Assistant
-                <small class="text-muted">(Tamil + English)</small>
-            </h2>
+<div class="voice-assistant-wrapper">
+    <div class="container py-4">
+        <!-- Hero Header -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <div class="hero-header">
+                    <div class="voice-icon-wrapper mb-3">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h1 class="display-4 fw-bold gradient-text mb-2">Voice Assistant</h1>
+                    <p class="lead text-white-50">
+                        <i class="fas fa-language me-2"></i>Speak in English or Tamil • Powered by AI
+                    </p>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <!-- Language Toggle -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
+        <!-- Language Toggle -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="language-toggle-card">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="mb-1">
-                                <i class="fas fa-language"></i> Language:
-                                <span id="currentLanguage" class="text-primary">English</span>
-                            </h5>
-                            <small class="text-muted">Toggle between English and Tamil</small>
+                        <div class="d-flex align-items-center">
+                            <div class="language-icon">
+                                <i class="fas fa-language"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0 text-white">
+                                    Language: <span id="currentLanguage" class="language-badge">English</span>
+                                </h5>
+                                <small class="text-white-50">Toggle between English and Tamil</small>
+                            </div>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="languageToggle" style="width: 60px; height: 30px;">
-                            <label class="form-check-label ms-2" for="languageToggle">
-                                <strong>தமிழ்</strong>
+                        <div class="form-check form-switch custom-switch">
+                            <input class="form-check-input" type="checkbox" id="languageToggle">
+                            <label class="form-check-label ms-2 text-white fw-bold" for="languageToggle">
+                                தமிழ்
                             </label>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row">
-        <!-- Voice Interface -->
-        <div class="col-md-6">
-            <div class="card shadow-lg h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-microphone"></i> Voice Input
-                    </h5>
-                </div>
-                <div class="card-body text-center">
-                    <!-- Microphone Visualization -->
-                    <div class="mic-container mb-4" style="position: relative;">
-                        <div id="micAnimation" class="mic-animation">
-                            <i class="fas fa-microphone fa-5x text-primary"></i>
-                        </div>
-                        <div id="pulseRing" class="pulse-ring" style="display: none;"></div>
+        <div class="row g-4">
+            <!-- Voice Interface -->
+            <div class="col-lg-6">
+                <div class="voice-card mic-card">
+                    <div class="card-header-gradient">
+                        <h4 class="mb-0 text-white fw-bold">
+                            <i class="fas fa-microphone me-2"></i>Voice Input
+                        </h4>
                     </div>
+                    <div class="card-body text-center p-4">
+                        <!-- Microphone Visualization -->
+                        <div class="mic-container mb-4">
+                            <div id="micAnimation" class="mic-animation">
+                                <div class="mic-circle">
+                                    <i class="fas fa-microphone fa-4x"></i>
+                                </div>
+                            </div>
+                            <div id="pulseRing" class="pulse-ring"></div>
+                        </div>
 
-                    <!-- Status -->
-                    <p id="statusText" class="status-idle mb-4">
-                        Click microphone to speak
-                    </p>
+                        <!-- Status -->
+                        <div class="status-container mb-4">
+                            <p id="statusText" class="status-idle mb-0">
+                                <i class="fas fa-circle-info me-2"></i>Click microphone to speak
+                            </p>
+                        </div>
 
-                    <!-- Mic Button -->
-                    <button id="micButton" class="btn btn-primary btn-lg px-5 mb-4">
-                        <i class="fas fa-microphone"></i> Speak
-                    </button>
+                        <!-- Mic Button -->
+                        <button id="micButton" class="btn-speak mb-4">
+                            <i class="fas fa-microphone me-2"></i>
+                            <span>Start Speaking</span>
+                        </button>
 
-                    <!-- Transcript Display -->
-                    <div id="transcriptDisplay" class="mt-4"></div>
+                        <!-- Transcript Display -->
+                        <div id="transcriptDisplay" class="transcript-box mt-4"></div>
 
-                    <!-- Quick Commands -->
-                    <div id="quickCommands" class="mt-4 text-start">
-                        <h6>Loading commands...</h6>
+                        <!-- Quick Commands -->
+                        <div id="quickCommands" class="quick-commands mt-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-bolt me-2"></i>Quick Commands
+                            </h6>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Results Panel -->
-        <div class="col-md-6">
-            <div class="card shadow-lg h-100">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="fas fa-brain"></i> Assistant Response
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <!-- Response Display -->
-                    <div id="responseDisplay"></div>
+            <!-- Results Panel -->
+            <div class="col-lg-6">
+                <div class="voice-card response-card">
+                    <div class="card-header-gradient response-gradient">
+                        <h4 class="mb-0 text-white fw-bold">
+                            <i class="fas fa-brain me-2"></i>Assistant Response
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Response Display -->
+                        <div id="responseDisplay" class="response-box"></div>
 
-                    <!-- Results Container -->
-                    <div id="resultsContainer">
-                        <div class="text-center text-muted p-5">
-                            <i class="fas fa-comments fa-3x mb-3"></i>
-                            <p>Speak a command to see results here</p>
-                            
-                            <div class="text-start mt-4">
-                                <h6>Example Commands (English):</h6>
-                                <ul class="small">
-                                    <li>"Order 5 kg tomatoes"</li>
-                                    <li>"Show me fresh vegetables"</li>
-                                    <li>"Check my order status"</li>
-                                    <li>"What fruits are available?"</li>
-                                </ul>
+                        <!-- Results Container -->
+                        <div id="resultsContainer">
+                            <div class="empty-state text-center p-4">
+                                <div class="empty-icon mb-3">
+                                    <i class="fas fa-comments"></i>
+                                </div>
+                                <h5 class="text-white-50 mb-4">Speak a command to see results</h5>
+                                
+                                <div class="examples-section">
+                                    <div class="example-group mb-4">
+                                        <h6 class="text-white mb-3">
+                                            <i class="fas fa-language me-2"></i>English Examples:
+                                        </h6>
+                                        <div class="example-item">"Order 5 kg tomatoes"</div>
+                                        <div class="example-item">"Show me fresh vegetables"</div>
+                                        <div class="example-item">"Check my order status"</div>
+                                        <div class="example-item">"What fruits are available?"</div>
+                                    </div>
 
-                                <h6 class="mt-3">Example Commands (Tamil):</h6>
-                                <ul class="small">
-                                    <li>"நான் 5 கிலோ தக்காளி ஆர்டர் செய்ய விரும்புகிறேன்"</li>
-                                    <li>"எனக்கு புதிய காய்கறிகள் காட்டுங்கள்"</li>
-                                    <li>"என் ஆர்டர் நிலையைச் சரிபார்க்கவும்"</li>
-                                    <li>"என்ன பழங்கள் கிடைக்கின்றன?"</li>
-                                </ul>
+                                    <div class="example-group">
+                                        <h6 class="text-white mb-3">
+                                            <i class="fas fa-language me-2"></i>Tamil Examples:
+                                        </h6>
+                                        <div class="example-item">"நான் 5 கிலோ தக்காளி ஆர்டர் செய்ய விரும்புகிறேன்"</div>
+                                        <div class="example-item">"எனக்கு புதிய காய்கறிகள் காட்டுங்கள்"</div>
+                                        <div class="example-item">"என் ஆர்டர் நிலையைச் சரிபார்க்கவும்"</div>
+                                        <div class="example-item">"என்ன பழங்கள் கிடைக்கின்றன?"</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Info Cards -->
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-globe fa-3x text-info mb-3"></i>
-                    <h6>Bilingual Support</h6>
-                    <p class="small text-muted">Speak in English or Tamil - we understand both!</p>
+        <!-- Feature Cards -->
+        <div class="row g-4 mt-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon blue-gradient">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h5 class="text-white mt-3 mb-2">Bilingual Support</h5>
+                    <p class="text-white-50 mb-0">Speak in English or Tamil - we understand both languages!</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon purple-gradient">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h5 class="text-white mt-3 mb-2">AI-Powered</h5>
+                    <p class="text-white-50 mb-0">Gemini AI understands your natural language commands</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon orange-gradient">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h5 class="text-white mt-3 mb-2">Real-Time</h5>
+                    <p class="text-white-50 mb-0">Instant voice recognition and lightning-fast processing</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-robot fa-3x text-warning mb-3"></i>
-                    <h6>AI-Powered</h6>
-                    <p class="small text-muted">Gemini AI understands natural language commands</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-body text-center">
-                    <i class="fas fa-bolt fa-3x text-danger mb-3"></i>
-                    <h6>Real-Time</h6>
-                    <p class="small text-muted">Instant voice recognition and processing</p>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Browser Support Notice -->
-    <div class="alert alert-info mt-4">
-        <h6><i class="fas fa-info-circle"></i> Browser Compatibility:</h6>
-        <p class="mb-0">
-            Works best on: <strong>Chrome, Edge, Safari</strong><br>
-            <small class="text-muted">Make sure to allow microphone access when prompted</small>
-        </p>
+        <!-- Browser Compatibility Notice -->
+        <div class="compatibility-notice mt-4">
+            <div class="d-flex align-items-start">
+                <div class="notice-icon">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <div class="ms-3">
+                    <h6 class="text-white mb-2">Browser Compatibility</h6>
+                    <p class="text-white-50 mb-2">
+                        Works best on: <strong class="text-white">Chrome, Edge, Safari</strong>
+                    </p>
+                    <p class="text-white-50 mb-0 small">
+                        <i class="fas fa-check-circle me-2"></i>Make sure to allow microphone access when prompted
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -178,31 +210,166 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* ===== MODERN VOICE ASSISTANT STYLING ===== */
+
+/* Main Wrapper with Gradient Background */
+.voice-assistant-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #4facfe 75%, #00f2fe 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    padding-bottom: 3rem;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Hero Header */
+.hero-header {
+    padding: 2rem 0;
+}
+
+.voice-icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+    animation: floatIcon 3s ease-in-out infinite;
+}
+
+.voice-icon-wrapper i {
+    font-size: 3rem;
+    color: white;
+}
+
+@keyframes floatIcon {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Language Toggle Card */
+.language-toggle-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 1.5rem 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.language-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.language-badge {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.custom-switch .form-check-input {
+    width: 60px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.custom-switch .form-check-input:checked {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-color: transparent;
+}
+
+/* Voice Cards */
+.voice-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 25px;
+    border: none;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.voice-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.2);
+}
+
+.card-header-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 1.5rem;
+    border: none;
+}
+
+.response-gradient {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Microphone Circle */
 .mic-container {
     position: relative;
     display: inline-block;
     padding: 30px;
 }
 
-.mic-animation {
+.mic-circle {
+    width: 150px;
+    height: 150px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
-#micButton.listening {
-    background-color: #dc3545;
-    border-color: #dc3545;
+.mic-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 20px 50px rgba(102, 126, 234, 0.5);
+}
+
+.mic-circle.active {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+        box-shadow: 0 0 0 0 rgba(240, 147, 251, 0.7);
     }
     70% {
-        box-shadow: 0 0 0 20px rgba(220, 53, 69, 0);
+        box-shadow: 0 0 0 30px rgba(240, 147, 251, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        box-shadow: 0 0 0 0 rgba(240, 147, 251, 0);
     }
 }
 
@@ -213,14 +380,19 @@ document.addEventListener('DOMContentLoaded', function() {
     transform: translate(-50%, -50%);
     width: 200px;
     height: 200px;
-    border: 3px solid #0d6efd;
+    border: 4px solid #667eea;
     border-radius: 50%;
     animation: pulsate 1.5s ease-out infinite;
+    display: none;
+}
+
+.pulse-ring.active {
+    display: block;
 }
 
 @keyframes pulsate {
     0% {
-        transform: translate(-50%, -50%) scale(0.5);
+        transform: translate(-50%, -50%) scale(0.7);
         opacity: 1;
     }
     100% {
@@ -229,44 +401,251 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
+/* Speak Button */
+.btn-speak {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-speak:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+}
+
+.btn-speak.listening {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    animation: pulse 1.5s infinite;
+}
+
+.btn-speak span {
+    margin-left: 0.5rem;
+}
+
+/* Status */
+.status-container {
+    min-height: 30px;
+}
+
 .status-idle {
     color: #6c757d;
+    font-size: 1rem;
 }
 
 .status-listening {
-    color: #0d6efd;
+    color: #667eea;
     font-weight: bold;
+    font-size: 1.1rem;
     animation: blink 1s infinite;
 }
 
 .status-processing {
     color: #ffc107;
     font-weight: bold;
+    font-size: 1.1rem;
 }
 
 .status-success {
-    color: #198754;
+    color: #28a745;
     font-weight: bold;
+    font-size: 1.1rem;
 }
 
 .status-error {
     color: #dc3545;
     font-weight: bold;
+    font-size: 1.1rem;
 }
 
 @keyframes blink {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+    50% { opacity: 0.6; }
 }
 
-#quickCommands button {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.8rem;
+/* Transcript Box */
+.transcript-box {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-height: 80px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
 }
 
+/* Quick Commands */
+.quick-commands button {
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #667eea;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin: 0.3rem;
+    transition: all 0.3s ease;
+}
+
+.quick-commands button:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Response Box */
+.response-box {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-height: 100px;
+    margin-bottom: 1rem;
+}
+
+/* Empty State */
+.empty-state {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #4facfe;
+}
+
+/* Example Items */
+.example-group {
+    text-align: left;
+}
+
+.example-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #4facfe;
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.example-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateX(5px);
+}
+
+/* Feature Cards */
+.feature-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 2rem;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+}
+
+.blue-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.purple-gradient {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.orange-gradient {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+/* Compatibility Notice */
+.compatibility-notice {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notice-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* Results Container */
 #resultsContainer {
     max-height: 500px;
     overflow-y: auto;
+}
+
+/* Scrollbar Styling */
+#resultsContainer::-webkit-scrollbar {
+    width: 8px;
+}
+
+#resultsContainer::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+#resultsContainer::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .voice-icon-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .voice-icon-wrapper i {
+        font-size: 2rem;
+    }
+    
+    .mic-circle {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .btn-speak {
+        padding: 0.8rem 2rem;
+        font-size: 1rem;
+    }
 }
 </style>
 
