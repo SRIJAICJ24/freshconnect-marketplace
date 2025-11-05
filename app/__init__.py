@@ -47,7 +47,12 @@ def create_app(config_name=None):
         app.register_blueprint(vision.bp)  # FEATURE 2: Camera & Image Recognition
         app.register_blueprint(voice.bp)  # FEATURE 1: Voice Assistant (Tamil + English)
         
-        db.create_all()
+        try:
+            db.create_all()
+            print("✅ Database tables created successfully!")
+        except Exception as e:
+            print(f"⚠️ Database init warning: {e}")
+            print("Database tables will be created on first request")
     
     @app.errorhandler(404)
     def not_found(error):
