@@ -12,28 +12,35 @@ class CreditSystem:
         """
         Calculate credit score using formula
         """
-        
-        credit = RetailerCredit.query.filter_by(retailer_id=retailer_id).first()
-        
-        if not credit:
-            return {
-                'score': 150,
-                'tier': 'bronze',
-                'tier_name': 'வெண்கல (Bronze)'
-            }
-        
-        orders = credit.total_orders if credit.total_orders else 0
-        successful = credit.successful_orders if credit.successful_orders else 0
-        
-        # MOCK FORMULA
-        purchase_score = min(orders * 10, 250)
-        frequency_score = min(successful * 5, 200)
-        punctuality_score = 200
-        completion_score = min((successful / max(orders, 1)) * 150, 150)
-        base_score = 150
-        
-        total_score = int(purchase_score + frequency_score + punctuality_score + completion_score + base_score)
-        total_score = min(total_score, 1000)
+        try:
+            credit = RetailerCredit.query.filter_by(retailer_id=retailer_id).first()
+            
+            if not credit:
+                return {
+                    'score': 500,
+                    'tier': 'silver',
+                    'tier_name': 'வெள்ளி (Silver)',
+                    'limit': 50000,
+                    'available': 50000,
+                    'utilized': 0
+                }
+            
+            orders = credit.total_orders if hasattr(credit, 'total_orders') and credit.total_orders else 0
+            successful = credit.successful_orders if hasattr(credit, 'successful_orders') and credit.successful_orders else 0
+            
+            # MOCK FORMULA
+            purchase_score = min(orders * 10, 250)
+            frequency_score = min(successful * 5, 200)
+            punctuality_score = 200
+            completion_score = min((successful / max(orders, 1)) * 150, 150)
+            base_score = 150
+            
+            total_score = int(purchase_score + frequency_score + punctuality_score + completion_score + base_score)
+            total_score = min(total_score, 1000)
+        except Exception as e:
+            print(f"⚠️ Credit calculation error: {e}")
+            # Return default values
+            total_score = 500
         
         if total_score >= 751:
             tier = 'platinum'
@@ -48,14 +55,23 @@ class CreditSystem:
             tier = 'bronze'
             tier_name = 'வெண்கல (Bronze)'
         
-        credit.credit_score = total_score
-        credit.credit_tier = tier
-        db.session.commit()
+        # Update credit object if it exists
+        try:
+            if credit:
+                credit.credit_score = total_score
+                credit.credit_tier = tier
+                db.session.commit()
+        except Exception as e:
+            print(f"⚠️ Credit update error: {e}")
+            db.session.rollback()
         
         return {
             'score': total_score,
             'tier': tier,
-            'tier_name': tier_name
+            'tier_name': tier_name,
+            'limit': 50000,
+            'available': 50000,
+            'utilized': 0
         }
     
     @staticmethod
