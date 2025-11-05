@@ -12,7 +12,7 @@ bp = Blueprint('retailer', __name__, url_prefix='/retailer')
 @bp.route('/dashboard')
 @retailer_required
 def dashboard():
-    # SIMPLIFIED VERSION - No complex calculations
+    # ULTRA SAFE VERSION - Returns HTML directly if template fails
     print(f"✅ Retailer dashboard accessed by user {current_user.id}")
     
     # Simple default credit - no database queries
@@ -31,7 +31,52 @@ def dashboard():
         print(f"❌ Template error: {e}")
         import traceback
         traceback.print_exc()
-        return f"<h1>Dashboard Loading Error</h1><p>Error: {str(e)}</p><p>User ID: {current_user.id}</p><p>User Type: {current_user.user_type}</p>", 500
+        
+        # Return basic HTML dashboard if template fails
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Retailer Dashboard - FreshConnect</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }}
+                .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }}
+                .header {{ color: #28a745; margin-bottom: 30px; }}
+                .card {{ background: #f8f9fa; padding: 20px; margin: 15px 0; border-radius: 5px; }}
+                .score {{ font-size: 48px; color: #28a745; font-weight: bold; }}
+                a {{ display: inline-block; margin: 10px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }}
+                a:hover {{ background: #0056b3; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1 class="header">🛒 Retailer Dashboard</h1>
+                <div class="card">
+                    <h2>Welcome, {current_user.name}!</h2>
+                    <p>Email: {current_user.email}</p>
+                </div>
+                <div class="card">
+                    <h3>Credit Score</h3>
+                    <div class="score">{credit_info['score']}</div>
+                    <p>Tier: {credit_info['tier'].upper()}</p>
+                    <p>Credit Limit: ₹{credit_info['limit']:,}</p>
+                </div>
+                <div class="card">
+                    <h3>Quick Actions</h3>
+                    <a href="/retailer/browse">Browse Products</a>
+                    <a href="/retailer/cart">My Cart</a>
+                    <a href="/retailer/orders">My Orders</a>
+                    <a href="/auth/logout">Logout</a>
+                </div>
+                <div class="card">
+                    <p style="color: #dc3545;">⚠️ Note: Dashboard template unavailable. Showing basic version.</p>
+                    <p><strong>Error:</strong> {str(e)}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        return html
 
 @bp.route('/browse')
 @retailer_required

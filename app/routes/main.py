@@ -12,17 +12,25 @@ def index():
 
 @bp.route('/dashboard')
 def dashboard():
-    if current_user.is_authenticated:
-        if current_user.user_type == 'vendor':
-            return redirect(url_for('vendor.dashboard'))
-        elif current_user.user_type == 'retailer':
-            return redirect(url_for('retailer.dashboard'))
-        elif current_user.user_type == 'driver':
-            return redirect(url_for('driver.dashboard'))
-        elif current_user.user_type == 'admin':
-            return redirect(url_for('admin.dashboard'))
-    
-    return render_template('index.html')
+    try:
+        if current_user.is_authenticated:
+            print(f"🔍 Dashboard redirect for user {current_user.id}, type: {current_user.user_type}")
+            
+            if current_user.user_type == 'vendor':
+                return redirect(url_for('vendor.dashboard'))
+            elif current_user.user_type == 'retailer':
+                return redirect(url_for('retailer.dashboard'))
+            elif current_user.user_type == 'driver':
+                return redirect(url_for('driver.dashboard'))
+            elif current_user.user_type == 'admin':
+                return redirect(url_for('admin.dashboard'))
+        
+        return render_template('index.html')
+    except Exception as e:
+        print(f"❌ Dashboard redirect error: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"<h1>Redirect Error</h1><p>{str(e)}</p><p>User: {current_user.id if current_user.is_authenticated else 'Not logged in'}</p>", 500
 
 @bp.route('/responsive-demo')
 def responsive_demo():
@@ -64,6 +72,28 @@ def init_db():
             'status': 'error',
             'message': str(e)
         }), 500
+
+@bp.route('/test-dashboard')
+def test_dashboard():
+    """Test route to diagnose dashboard issues"""
+    if not current_user.is_authenticated:
+        return "<h1>NOT LOGGED IN</h1><p>Please login first</p>"
+    
+    html = f"""
+    <h1>✅ TEST DASHBOARD - WORKING!</h1>
+    <p><strong>User ID:</strong> {current_user.id}</p>
+    <p><strong>Name:</strong> {current_user.name}</p>
+    <p><strong>Email:</strong> {current_user.email}</p>
+    <p><strong>User Type:</strong> {current_user.user_type}</p>
+    <hr>
+    <p>If you see this, your login works!</p>
+    <p>The error is in the template or dashboard logic.</p>
+    <hr>
+    <a href="/retailer/dashboard">Try Retailer Dashboard</a> |
+    <a href="/vendor/dashboard">Try Vendor Dashboard</a> |
+    <a href="/auth/logout">Logout</a>
+    """
+    return html
 
 @bp.route('/seed-data')
 def seed_data():

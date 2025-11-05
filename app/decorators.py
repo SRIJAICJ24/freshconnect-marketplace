@@ -5,19 +5,43 @@ from flask_login import current_user
 def vendor_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.user_type != 'vendor':
-            flash('Vendor access required', 'danger')
+        try:
+            if not current_user.is_authenticated:
+                flash('Please login to access this page', 'warning')
+                return redirect(url_for('auth.login'))
+            
+            if current_user.user_type != 'vendor':
+                flash('Vendor access required', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(f"❌ Decorator error in vendor_required: {e}")
+            import traceback
+            traceback.print_exc()
+            flash('Authentication error. Please login again.', 'danger')
             return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
     return decorated_function
 
 def retailer_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.user_type != 'retailer':
-            flash('Retailer access required', 'danger')
+        try:
+            if not current_user.is_authenticated:
+                flash('Please login to access this page', 'warning')
+                return redirect(url_for('auth.login'))
+            
+            if current_user.user_type != 'retailer':
+                flash('Retailer access required', 'danger')
+                return redirect(url_for('auth.login'))
+            
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(f"❌ Decorator error in retailer_required: {e}")
+            import traceback
+            traceback.print_exc()
+            flash('Authentication error. Please login again.', 'danger')
             return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
     return decorated_function
 
 def driver_required(f):
