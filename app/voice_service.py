@@ -137,17 +137,25 @@ class VoiceService:
         numbers = re.findall(r'\d+', text)
         
         # PATTERN 1: Order/Find Products (detect product mentions)
-        # Common product names
+        # Common product names - expanded list
         products = {
-            'tomato': ['tomato', 'tomatoes', 'தக்காளி'],
-            'potato': ['potato', 'potatoes', 'உருளைக்கிழங்கு'],
-            'onion': ['onion', 'onions', 'வெங்காயம்'],
+            'tomato': ['tomato', 'tomatoes', 'தக்காளி', 'tamato'],
+            'potato': ['potato', 'potatoes', 'உருளைக்கிழங்கு', 'aloo'],
+            'onion': ['onion', 'onions', 'வெங்காயம்', 'pyaz'],
             'carrot': ['carrot', 'carrots', 'கேரட்'],
-            'apple': ['apple', 'apples', 'ஆப்பிள்'],
-            'banana': ['banana', 'bananas', 'வாழைப்பழம்'],
-            'orange': ['orange', 'oranges', 'ஆரஞ்சு'],
-            'vegetable': ['vegetable', 'vegetables', 'காய்கறி', 'veggies'],
-            'fruit': ['fruit', 'fruits', 'பழம்']
+            'apple': ['apple', 'apples', 'ஆப்பிள்', 'seb'],
+            'banana': ['banana', 'bananas', 'வாழைப்பழம்', 'kela'],
+            'orange': ['orange', 'oranges', 'ஆரஞ்சு', 'santra'],
+            'mango': ['mango', 'mangoes', 'மா', 'aam'],
+            'rice': ['rice', 'அரிசி', 'chawal'],
+            'wheat': ['wheat', 'கோதுமை', 'gehun'],
+            'lentil': ['lentil', 'lentils', 'dal', 'பருப்பு'],
+            'cabbage': ['cabbage', 'முட்டைகோஸ்'],
+            'cauliflower': ['cauliflower', 'பூக்கோஸ்', 'gobi'],
+            'spinach': ['spinach', 'கீரை', 'palak'],
+            'grape': ['grape', 'grapes', 'திராட்சை', 'angoor'],
+            'vegetable': ['vegetable', 'vegetables', 'காய்கறி', 'veggies', 'veggie', 'sabzi'],
+            'fruit': ['fruit', 'fruits', 'பழம்', 'phal']
         }
         
         detected_product = None
@@ -157,7 +165,9 @@ class VoiceService:
                 break
         
         # If product detected OR order/find keywords present
-        product_keywords = ['order', 'find', 'show', 'search', 'get', 'வேண்டும்', 'காட்டு', 'kg', 'of']
+        product_keywords = ['order', 'find', 'show', 'search', 'get', 'want', 'need', 'buy', 'purchase', 
+                           'வேண்டும்', 'காட்டு', 'kg', 'of', 'list', 'all', 'available', 'price', 
+                           'cost', 'tell me', 'what', 'any', 'have']
         has_product_keyword = any(word in text_lower for word in product_keywords)
         
         if detected_product or has_product_keyword:

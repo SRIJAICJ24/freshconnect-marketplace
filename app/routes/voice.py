@@ -11,6 +11,41 @@ from app import db
 bp = Blueprint('voice', __name__, url_prefix='/voice')
 
 
+@bp.route('/test')
+@login_required
+def test_voice():
+    """Test voice assistant configuration"""
+    from app.voice_service import VoiceService
+    import os
+    
+    # Test different queries
+    test_queries = [
+        "show me tomatoes",
+        "list all vegetables",
+        "find onions",
+        "what fruits do you have",
+        "check my orders"
+    ]
+    
+    results = []
+    for query in test_queries:
+        # Test fallback system
+        result = VoiceService.simple_understand_command(query, current_user.user_type)
+        results.append({
+            'query': query,
+            'success': result['success'],
+            'intent': result.get('command', {}).get('intent', 'unknown'),
+            'entities': result.get('command', {}).get('entities', {})
+        })
+    
+    return jsonify({
+        'user_type': current_user.user_type,
+        'gemini_api_configured': bool(os.environ.get('GEMINI_API_KEY')),
+        'test_results': results,
+        'status': 'Voice assistant fallback is working!' if all(r['success'] for r in results) else 'Some queries failed'
+    })
+
+
 @bp.route('/assistant')
 @login_required
 def assistant():
