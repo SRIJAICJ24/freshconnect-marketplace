@@ -62,9 +62,23 @@
 /* ===== GLOBAL STYLES ===== */
 body {
     font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+    background: #ffffff;
     color: var(--dark);
     line-height: 1.6;
+}
+
+/* Fix text contrast issues */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--dark);
+    font-weight: 700;
+}
+
+p, span, a {
+    color: var(--dark);
+}
+
+.text-muted {
+    color: var(--gray) !important;
 }
 
 /* ===== NAVBAR ===== */
@@ -436,6 +450,7 @@ body {
     color: var(--primary);
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -543,6 +558,7 @@ body {
 .gradient-text {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 700;
 }
