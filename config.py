@@ -50,6 +50,9 @@ class TestingConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
+    # Railway handles HTTPS but we need to be more permissive with sessions
+    SESSION_COOKIE_SECURE = False  # Railway proxy handles HTTPS
+    SESSION_COOKIE_SAMESITE = None  # More permissive for Railway
 
 config_by_name = {
     'development': DevelopmentConfig,

@@ -1,5 +1,8 @@
-from flask import Blueprint, render_template, redirect, url_for
+from flask import Blueprint, render_template, redirect, url_for, jsonify
 from flask_login import current_user
+from app import db
+from app.models import User
+import os
 
 bp = Blueprint('main', __name__)
 
@@ -25,3 +28,39 @@ def dashboard():
 def responsive_demo():
     """Demo page showing mobile-first responsive design"""
     return render_template('responsive_demo.html')
+
+@bp.route('/health')
+def health():
+    """Health check endpoint for Railway deployment"""
+    try:
+        # Check database connection
+        user_count = User.query.count()
+        db_status = "connected"
+    except Exception as e:
+        user_count = 0
+        db_status = f"error: {str(e)}"
+    
+    return jsonify({
+        'status': 'running',
+        'database': db_status,
+        'users': user_count,
+        'environment': os.environ.get('FLASK_ENV', 'unknown'),
+        'has_secret_key': bool(os.environ.get('SECRET_KEY')),
+        'has_database_url': bool(os.environ.get('DATABASE_URL'))
+    })
+
+@bp.route('/init-db')
+def init_db():
+    """Initialize database tables - use this once after deployment"""
+    try:
+        db.create_all()
+        return jsonify({
+            'status': 'success',
+            'message': 'Database tables created successfully!',
+            'users': User.query.count()
+        })
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
