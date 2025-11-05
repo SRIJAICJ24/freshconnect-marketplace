@@ -12,51 +12,26 @@ bp = Blueprint('retailer', __name__, url_prefix='/retailer')
 @bp.route('/dashboard')
 @retailer_required
 def dashboard():
+    # SIMPLIFIED VERSION - No complex calculations
+    print(f"✅ Retailer dashboard accessed by user {current_user.id}")
+    
+    # Simple default credit - no database queries
+    credit_info = {
+        'score': 500,
+        'tier': 'silver',
+        'tier_name': 'Silver',
+        'limit': 50000,
+        'available': 50000,
+        'utilized': 0
+    }
+    
     try:
-        # Try to get or create credit record
-        credit = RetailerCredit.query.filter_by(retailer_id=current_user.id).first()
-        
-        if not credit:
-            try:
-                credit = RetailerCredit(retailer_id=current_user.id)
-                db.session.add(credit)
-                db.session.commit()
-            except Exception as e:
-                print(f"⚠️ Could not create credit record: {e}")
-                db.session.rollback()
-        
-        # Calculate credit with fallback
-        try:
-            credit_info = CreditSystem.calculate_credit_score(current_user.id)
-        except Exception as e:
-            print(f"⚠️ Credit calculation failed: {e}")
-            credit_info = {
-                'score': 500,
-                'tier': 'silver',
-                'tier_name': 'வெள்ளி (Silver)',
-                'limit': 50000,
-                'available': 50000,
-                'utilized': 0
-            }
-        
         return render_template('retailer/dashboard.html', credit=credit_info)
-        
     except Exception as e:
-        # Ultimate fallback
-        print(f"❌ Dashboard error for user {current_user.id}: {e}")
+        print(f"❌ Template error: {e}")
         import traceback
         traceback.print_exc()
-        
-        flash('Welcome! Dashboard is loading with default settings.', 'info')
-        default_credit = {
-            'score': 500,
-            'tier': 'silver',
-            'tier_name': 'வெள்ளி (Silver)',
-            'limit': 50000,
-            'available': 50000,
-            'utilized': 0
-        }
-        return render_template('retailer/dashboard.html', credit=default_credit)
+        return f"<h1>Dashboard Loading Error</h1><p>Error: {str(e)}</p><p>User ID: {current_user.id}</p><p>User Type: {current_user.user_type}</p>", 500
 
 @bp.route('/browse')
 @retailer_required

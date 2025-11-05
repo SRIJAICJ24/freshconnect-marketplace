@@ -62,8 +62,24 @@ def login():
         
         if user and user.check_password(password):
             login_user(user)
+            print(f"✅ User {user.id} ({user.user_type}) logged in successfully")
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('main.dashboard'))
+            
+            try:
+                return redirect(url_for('main.dashboard'))
+            except Exception as e:
+                print(f"❌ Redirect error: {e}")
+                # Direct redirect based on user type
+                if user.user_type == 'retailer':
+                    return redirect(url_for('retailer.dashboard'))
+                elif user.user_type == 'vendor':
+                    return redirect(url_for('vendor.dashboard'))
+                elif user.user_type == 'driver':
+                    return redirect(url_for('driver.dashboard'))
+                elif user.user_type == 'admin':
+                    return redirect(url_for('admin.dashboard'))
+                else:
+                    return redirect(url_for('main.index'))
         else:
             flash('Invalid email or password', 'danger')
     

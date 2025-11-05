@@ -12,25 +12,28 @@ bp = Blueprint('vendor', __name__, url_prefix='/vendor')
 @bp.route('/dashboard')
 @vendor_required
 def dashboard():
+    print(f"✅ Vendor dashboard accessed by user {current_user.id}")
+    
     try:
         total_products = Product.query.filter_by(vendor_id=current_user.id).count()
         total_orders = Order.query.filter_by(seller_id=current_user.id).count()
-        
-        recent_orders = Order.query.filter_by(
-            seller_id=current_user.id
-        ).order_by(Order.created_at.desc()).limit(5).all()
-        
+        recent_orders = Order.query.filter_by(seller_id=current_user.id).order_by(Order.created_at.desc()).limit(5).all()
+    except Exception as e:
+        print(f"⚠️ Database query error: {e}")
+        total_products = 0
+        total_orders = 0
+        recent_orders = []
+    
+    try:
         return render_template('vendor/dashboard.html',
                              total_products=total_products,
                              total_orders=total_orders,
                              recent_orders=recent_orders)
     except Exception as e:
-        print(f"❌ Vendor dashboard error for user {current_user.id}: {e}")
-        flash('Error loading dashboard. Please try again.', 'error')
-        return render_template('vendor/dashboard.html',
-                             total_products=0,
-                             total_orders=0,
-                             recent_orders=[])
+        print(f"❌ Template error: {e}")
+        import traceback
+        traceback.print_exc()
+        return f"<h1>Vendor Dashboard Error</h1><p>Error: {str(e)}</p><p>User: {current_user.name}</p>", 500
 
 @bp.route('/add-product', methods=['GET', 'POST'])
 @vendor_required
