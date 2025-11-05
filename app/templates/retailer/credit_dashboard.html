@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-medal text-warning"></i> Credit Score Dashboard
+    </h2>
+    
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white;">
+                <div class="card-body text-center p-5">
+                    <h5 class="mb-3">Your Credit Score</h5>
+                    <h1 class="display-1 mb-3">{{ credit.score }}</h1>
+                    <h4 class="mb-0">
+                        <span class="badge bg-light text-dark fs-5">{{ credit.tier_name }}</span>
+                    </h4>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Tier Benefits</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-percent text-success"></i>
+                            <strong>Discount:</strong> {{ benefits.discount }}%
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-clock text-info"></i>
+                            <strong>Early Access:</strong> {{ benefits.early_access }} minutes
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-calendar text-primary"></i>
+                            <strong>Payment Terms:</strong> {{ benefits.payment_terms }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">How Credit Score Works</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>MOCK CREDIT SYSTEM:</strong> This uses a formula to calculate scores for demonstration
+            </div>
+            
+            <div class="row text-center">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="text-muted">Bronze</h6>
+                            <p class="mb-0 fw-bold">0-250</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="text-muted">Silver</h6>
+                            <p class="mb-0 fw-bold">251-500</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="text-muted">Gold</h6>
+                            <p class="mb-0 fw-bold">501-750</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="text-muted">Platinum</h6>
+                            <p class="mb-0 fw-bold">751-1000</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <h6 class="mt-4">Improve Your Score:</h6>
+            <ul>
+                <li>Complete more orders</li>
+                <li>Make timely payments</li>
+                <li>Maintain good order history</li>
+                <li>Regular purchases increase tier</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

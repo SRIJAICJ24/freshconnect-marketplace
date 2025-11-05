@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-shipping-fast text-success"></i> Delivery Details
+    </h2>
+    
+    <div class="card shadow">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Order #{{ assignment.order_id }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>Pickup Location</h6>
+                    <p>{{ assignment.pickup_location }}</p>
+                    
+                    <h6>Delivery Location</h6>
+                    <p>{{ assignment.delivery_location }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Order Details</h6>
+                    <p><strong>Weight:</strong> {{ assignment.weight_assigned_kg }} kg</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-warning">{{ assignment.assignment_status }}</span>
+                    </p>
+                    <p><strong>Assigned:</strong> {{ assignment.assigned_at.strftime('%d %b, %I:%M %p') }}</p>
+                </div>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Mock Delivery System:</strong> Actions are simulated for demonstration
+            </div>
+            
+            <div class="d-flex gap-2">
+                {% if assignment.assignment_status == 'assigned' %}
+                <form method="POST" action="/driver/delivery/{{ assignment.id }}/pickup">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-box"></i> Mark as Picked Up
+                    </button>
+                </form>
+                {% endif %}
+                
+                {% if assignment.assignment_status == 'picked_up' %}
+                <form method="POST" action="/driver/delivery/{{ assignment.id }}/deliver">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check"></i> Mark as Delivered
+                    </button>
+                </form>
+                {% endif %}
+                
+                <a href="/driver/assignments" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

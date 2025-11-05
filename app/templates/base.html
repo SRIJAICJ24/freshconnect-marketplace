@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FreshConnect">
+    <meta name="theme-color" content="#28a745">
+    
+    <title>{% block title %}FreshConnect - Koyambedu Marketplace{% endblock %}</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- CSS - Mobile-First -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-first.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Prevent layout shift -->
+    <style>
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+    <!-- BOTTOM NAVIGATION (Mobile) -->
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">
+            <i class="fas fa-leaf"></i> FreshConnect
+        </a>
+        
+        <ul class="navbar-nav">
+            {% if current_user.is_authenticated %}
+                {% if current_user.user_type == 'vendor' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'vendor.dashboard' in request.endpoint %}active{% endif %}" href="/vendor/dashboard">
+                        <i class="fas fa-store"></i>
+                        <small>Dashboard</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'vendor.products' in request.endpoint %}active{% endif %}" href="/vendor/products">
+                        <i class="fas fa-box"></i>
+                        <small>Products</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'vendor.add_product' in request.endpoint %}active{% endif %}" href="/vendor/add-product">
+                        <i class="fas fa-plus"></i>
+                        <small>Add</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'emergency.vendor' in request.endpoint %}active{% endif %}" href="/emergency/vendor/dashboard">
+                        <i class="fas fa-fire"></i>
+                        <small>Emergency</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <small>Logout</small>
+                    </a>
+                </li>
+                
+                {% elif current_user.user_type == 'retailer' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'retailer.dashboard' in request.endpoint %}active{% endif %}" href="/retailer/dashboard">
+                        <i class="fas fa-home"></i>
+                        <small>Home</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'voice.assistant' in request.endpoint %}active{% endif %}" href="/voice/assistant">
+                        <i class="fas fa-microphone"></i>
+                        <small>Voice</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'retailer.browse' in request.endpoint %}active{% endif %}" href="/retailer/browse">
+                        <i class="fas fa-shopping-bag"></i>
+                        <small>Shop</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'retailer.cart' in request.endpoint %}active{% endif %}" href="/retailer/cart">
+                        <i class="fas fa-shopping-cart"></i>
+                        <small>Cart</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showRetailerMenu(event)">
+                        <i class="fas fa-ellipsis-h"></i>
+                        <small>More</small>
+                    </a>
+                </li>
+                
+                {% elif current_user.user_type == 'driver' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'driver.dashboard' in request.endpoint %}active{% endif %}" href="/driver/dashboard">
+                        <i class="fas fa-car"></i>
+                        <small>Dashboard</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'driver.assignments' in request.endpoint %}active{% endif %}" href="/driver/assignments">
+                        <i class="fas fa-tasks"></i>
+                        <small>Deliveries</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <small>Logout</small>
+                    </a>
+                </li>
+                
+                {% elif current_user.user_type == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'admin.dashboard' in request.endpoint %}active{% endif %}" href="/admin/dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <small>Dashboard</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'admin.users' in request.endpoint %}active{% endif %}" href="/admin/users">
+                        <i class="fas fa-users"></i>
+                        <small>Users</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint and 'emergency.admin' in request.endpoint %}active{% endif %}" href="/emergency/admin/analytics">
+                        <i class="fas fa-chart-bar"></i>
+                        <small>Analytics</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/logout">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <small>Logout</small>
+                    </a>
+                </li>
+                {% endif %}
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/login">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <small>Login</small>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/register">
+                        <i class="fas fa-user-plus"></i>
+                        <small>Register</small>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <!-- Flash Messages -->
+    <div class="container-fluid mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    
+    <!-- MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- FLOATING ACTION BUTTON (Optional) -->
+    {% if current_user.is_authenticated and current_user.user_type == 'retailer' %}
+    <button class="fab" onclick="window.location.href='/retailer/cart'" title="View Cart">
+        <i class="fas fa-shopping-cart"></i>
+    </button>
+    {% endif %}
+    
+    <!-- FOOTER -->
+    <footer style="text-align: center; padding: 20px 0; color: #999; font-size: 12px;">
+        <p style="margin: 0;">© 2025 FreshConnect | Only Gemini API</p>
+    </footer>
+    
+    <!-- JavaScript -->
+    <!-- Bootstrap 5 JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="{{ url_for('static', filename='js/mobile-app.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <!-- AI Chatbot Widget (Gemini API) -->
+    {% if current_user.is_authenticated %}
+    {% include 'components/chatbot.html' %}
+    {% endif %}
+</body>
+</html>

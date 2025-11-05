@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}My Deliveries - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-truck-loading text-success"></i> My Deliveries
+    </h2>
+    
+    <!-- Driver Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h3>{{ deliveries|length }}</h3>
+                    <small>Total Assigned</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h3>{{ driver.current_load_kg }} kg</h3>
+                    <small>Current Load</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h3>{{ driver.vehicle_capacity_kg }} kg</h3>
+                    <small>Total Capacity</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h3>{{ driver.total_deliveries }}</h3>
+                    <small>Completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if deliveries %}
+        <div class="card shadow">
+            <div class="card-header bg-white">
+                <h5 class="mb-0">Delivery List</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Buyer</th>
+                                <th>Delivery Location</th>
+                                <th>Distance</th>
+                                <th>Weight</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for delivery in deliveries %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ delivery.order.id }}</strong>
+                                </td>
+                                <td>
+                                    <i class="fas fa-user"></i> {{ delivery.order.buyer.name }}
+                                </td>
+                                <td>
+                                    {% if delivery.location %}
+                                        <i class="fas fa-map-marker-alt text-danger"></i> 
+                                        {{ delivery.location.retailer_location }}
+                                        <br>
+                                        <small class="text-muted">
+                                            {{ delivery.location.distance_from_vendor_km }} km from vendor
+                                        </small>
+                                    {% else %}
+                                        <span class="text-muted">Location not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if delivery.location %}
+                                        <i class="fas fa-road"></i> {{ delivery.location.distance_from_vendor_km }} km
+                                        <br>
+                                        <small class="text-info">+{{ delivery.location.detour_distance_km }} km detour</small>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if delivery.location %}
+                                        <i class="fas fa-weight"></i> {{ delivery.location.total_weight_kg }} kg
+                                        <br>
+                                        <small class="text-muted">{{ delivery.location.volume_m3 }} m³</small>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>₹{{ "%.2f"|format(delivery.order.total_amount) }}</strong>
+                                    {% if delivery.location %}
+                                        <br>
+                                        <small class="text-success">
+                                            Driver: ₹{{ "%.2f"|format(delivery.location.driver_rate) }}
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if delivery.order.order_status == 'pending' %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% elif delivery.order.order_status == 'confirmed' %}
+                                        <span class="badge bg-info">Confirmed</span>
+                                    {% elif delivery.order.order_status == 'in_transit' %}
+                                        <span class="badge bg-primary">In Transit</span>
+                                    {% elif delivery.order.order_status == 'delivered' %}
+                                        <span class="badge bg-success">Delivered</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ delivery.order.order_status }}</span>
+                                    {% endif %}
+                                    
+                                    {% if delivery.steps %}
+                                        <br>
+                                        <small class="text-muted">
+                                            Step {{ delivery.steps|selectattr('status', 'equalto', 'completed')|list|length }}/4
+                                        </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('driver.delivery_detail', order_id=delivery.order.id) }}" 
+                                       class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <h5>No Deliveries Assigned</h5>
+            <p class="mb-0">You will see deliveries here when orders are assigned to you.</p>
+            <p class="mt-2">
+                <a href="{{ url_for('driver.routes') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-route"></i> View My Routes
+                </a>
+            </p>
+        </div>
+    {% endif %}
+    
+    <!-- Navigation -->
+    <div class="mt-4">
+        <a href="{{ url_for('driver.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{{ url_for('driver.routes') }}" class="btn btn-outline-primary">
+            <i class="fas fa-route"></i> My Routes
+        </a>
+    </div>
+</div>
+{% endblock %}

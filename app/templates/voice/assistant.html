@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}Voice Assistant - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-microphone-alt text-primary"></i> Voice Assistant
+                <small class="text-muted">(Tamil + English)</small>
+            </h2>
+        </div>
+    </div>
+
+    <!-- Language Toggle -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">
+                                <i class="fas fa-language"></i> Language:
+                                <span id="currentLanguage" class="text-primary">English</span>
+                            </h5>
+                            <small class="text-muted">Toggle between English and Tamil</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="languageToggle" style="width: 60px; height: 30px;">
+                            <label class="form-check-label ms-2" for="languageToggle">
+                                <strong>தமிழ்</strong>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Voice Interface -->
+        <div class="col-md-6">
+            <div class="card shadow-lg h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-microphone"></i> Voice Input
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <!-- Microphone Visualization -->
+                    <div class="mic-container mb-4" style="position: relative;">
+                        <div id="micAnimation" class="mic-animation">
+                            <i class="fas fa-microphone fa-5x text-primary"></i>
+                        </div>
+                        <div id="pulseRing" class="pulse-ring" style="display: none;"></div>
+                    </div>
+
+                    <!-- Status -->
+                    <p id="statusText" class="status-idle mb-4">
+                        Click microphone to speak
+                    </p>
+
+                    <!-- Mic Button -->
+                    <button id="micButton" class="btn btn-primary btn-lg px-5 mb-4">
+                        <i class="fas fa-microphone"></i> Speak
+                    </button>
+
+                    <!-- Transcript Display -->
+                    <div id="transcriptDisplay" class="mt-4"></div>
+
+                    <!-- Quick Commands -->
+                    <div id="quickCommands" class="mt-4 text-start">
+                        <h6>Loading commands...</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="col-md-6">
+            <div class="card shadow-lg h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain"></i> Assistant Response
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Response Display -->
+                    <div id="responseDisplay"></div>
+
+                    <!-- Results Container -->
+                    <div id="resultsContainer">
+                        <div class="text-center text-muted p-5">
+                            <i class="fas fa-comments fa-3x mb-3"></i>
+                            <p>Speak a command to see results here</p>
+                            
+                            <div class="text-start mt-4">
+                                <h6>Example Commands (English):</h6>
+                                <ul class="small">
+                                    <li>"Order 5 kg tomatoes"</li>
+                                    <li>"Show me fresh vegetables"</li>
+                                    <li>"Check my order status"</li>
+                                    <li>"What fruits are available?"</li>
+                                </ul>
+
+                                <h6 class="mt-3">Example Commands (Tamil):</h6>
+                                <ul class="small">
+                                    <li>"நான் 5 கிலோ தக்காளி ஆர்டர் செய்ய விரும்புகிறேன்"</li>
+                                    <li>"எனக்கு புதிய காய்கறிகள் காட்டுங்கள்"</li>
+                                    <li>"என் ஆர்டர் நிலையைச் சரிபார்க்கவும்"</li>
+                                    <li>"என்ன பழங்கள் கிடைக்கின்றன?"</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-globe fa-3x text-info mb-3"></i>
+                    <h6>Bilingual Support</h6>
+                    <p class="small text-muted">Speak in English or Tamil - we understand both!</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-robot fa-3x text-warning mb-3"></i>
+                    <h6>AI-Powered</h6>
+                    <p class="small text-muted">Gemini AI understands natural language commands</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-bolt fa-3x text-danger mb-3"></i>
+                    <h6>Real-Time</h6>
+                    <p class="small text-muted">Instant voice recognition and processing</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Browser Support Notice -->
+    <div class="alert alert-info mt-4">
+        <h6><i class="fas fa-info-circle"></i> Browser Compatibility:</h6>
+        <p class="mb-0">
+            Works best on: <strong>Chrome, Edge, Safari</strong><br>
+            <small class="text-muted">Make sure to allow microphone access when prompted</small>
+        </p>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/voice-assistant.js') }}"></script>
+<script>
+let voiceUI;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize voice assistant UI
+    voiceUI = new VoiceAssistantUI('voiceContainer');
+    
+    // Load voices for speech synthesis
+    if ('speechSynthesis' in window) {
+        speechSynthesis.onvoiceschanged = () => {
+            console.log('Voices loaded:', speechSynthesis.getVoices().length);
+        };
+    }
+});
+</script>
+
+<style>
+.mic-container {
+    position: relative;
+    display: inline-block;
+    padding: 30px;
+}
+
+.mic-animation {
+    transition: all 0.3s ease;
+}
+
+#micButton.listening {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 20px rgba(220, 53, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+.pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+    height: 200px;
+    border: 3px solid #0d6efd;
+    border-radius: 50%;
+    animation: pulsate 1.5s ease-out infinite;
+}
+
+@keyframes pulsate {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.5);
+        opacity: 0;
+    }
+}
+
+.status-idle {
+    color: #6c757d;
+}
+
+.status-listening {
+    color: #0d6efd;
+    font-weight: bold;
+    animation: blink 1s infinite;
+}
+
+.status-processing {
+    color: #ffc107;
+    font-weight: bold;
+}
+
+.status-success {
+    color: #198754;
+    font-weight: bold;
+}
+
+.status-error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+#quickCommands button {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.8rem;
+}
+
+#resultsContainer {
+    max-height: 500px;
+    overflow-y: auto;
+}
+</style>
+
+{% endblock %}

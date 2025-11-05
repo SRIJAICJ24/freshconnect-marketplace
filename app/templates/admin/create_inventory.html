@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-plus-circle text-success"></i> Create Inventory Stock
+                </h2>
+                <a href="{{ url_for('admin_inventory.view_stocks') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-list"></i> View All Stocks
+                </a>
+            </div>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>How it works:</strong> Create inventory with auto-generated barcodes. Vendors scan these barcodes to add products to their inventory instantly!
+            </div>
+            
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box"></i> Product Details
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Product Name *</label>
+                                <input type="text" class="form-control" name="product_name" required 
+                                       placeholder="e.g., Fresh Tomatoes">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Category *</label>
+                                <select class="form-select" name="category" required>
+                                    <option value="">-- Select Category --</option>
+                                    <option value="Vegetables">🥕 Vegetables</option>
+                                    <option value="Fruits">🍎 Fruits</option>
+                                    <option value="Flowers">🌸 Flowers</option>
+                                    <option value="Grains">🌾 Grains</option>
+                                    <option value="Dairy">🥛 Dairy</option>
+                                    <option value="Other">📦 Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Weight/Quantity *</label>
+                                <input type="number" class="form-control" name="weight" step="0.01" required 
+                                       placeholder="e.g., 50">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Unit *</label>
+                                <select class="form-select" name="unit" required>
+                                    <option value="kg">Kilogram (kg)</option>
+                                    <option value="bunch">Bunch</option>
+                                    <option value="piece">Piece</option>
+                                    <option value="liter">Liter</option>
+                                    <option value="dozen">Dozen</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-bold">Price (₹) *</label>
+                                <input type="number" class="form-control" name="price" step="0.01" required 
+                                       placeholder="Per unit">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Expiry Date (Optional)</label>
+                            <input type="date" class="form-control" name="expiry_date">
+                            <small class="text-muted">Leave blank if product doesn't expire</small>
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <i class="fas fa-barcode"></i>
+                            <strong>Barcode will be auto-generated</strong> when you create this stock.
+                            Vendors can scan this barcode to claim the inventory.
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> Create Stock
+                            </button>
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

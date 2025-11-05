@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-flag text-danger"></i> Report an Issue
+        </h2>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="card shadow-lg border-0">
+        <div class="card-body p-4">
+            <form method="POST" action="{{ url_for('reports.create_report') }}">
+                <!-- Report Type -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-list"></i> Report Type *
+                    </label>
+                    <select name="report_type" class="form-select" required>
+                        <option value="">Select type...</option>
+                        <option value="quality_issue">Product Quality Issue</option>
+                        <option value="delivery_issue">Delivery Problem</option>
+                        <option value="payment_issue">Payment Issue</option>
+                        <option value="vendor_misconduct">Vendor Misconduct</option>
+                        <option value="driver_issue">Driver Issue</option>
+                        <option value="technical_issue">Technical/App Issue</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Reported User (Optional) -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-user"></i> Report About (Optional)
+                    </label>
+                    <select name="reported_user_id" class="form-select">
+                        <option value="">Not related to a specific user</option>
+                        <optgroup label="Vendors">
+                            {% for vendor in vendors %}
+                            <option value="{{ vendor.id }}">{{ vendor.business_name or vendor.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Drivers">
+                            {% for driver in drivers %}
+                            <option value="{{ driver.id }}">{{ driver.name }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Related Order (Optional) -->
+                {% if orders %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-shopping-bag"></i> Related Order (Optional)
+                    </label>
+                    <select name="order_id" class="form-select">
+                        <option value="">Not related to a specific order</option>
+                        {% for order in orders %}
+                        <option value="{{ order.id }}">
+                            Order #{{ order.id }} - ₹{{ order.total_amount }} 
+                            ({{ order.created_at.strftime('%d %b') }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <!-- Subject -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-heading"></i> Subject *
+                    </label>
+                    <input type="text" 
+                           name="subject" 
+                           class="form-control" 
+                           placeholder="Brief summary of the issue"
+                           required 
+                           maxlength="200">
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-align-left"></i> Description *
+                    </label>
+                    <textarea name="description" 
+                              class="form-control" 
+                              rows="6" 
+                              placeholder="Provide detailed information about the issue..."
+                              required></textarea>
+                    <small class="text-muted">Please be as detailed as possible to help us resolve the issue quickly.</small>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="fas fa-paper-plane"></i> Submit Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Help Info -->
+    <div class="card mt-4 border-info">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-info-circle"></i> Reporting Guidelines
+            </h6>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li>Reports are reviewed by our admin team within 24-48 hours</li>
+                <li>Provide as much detail as possible to help us investigate</li>
+                <li>Include order numbers, dates, and names if applicable</li>
+                <li>False reports may result in account suspension</li>
+                <li>You will receive a response via your registered email</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

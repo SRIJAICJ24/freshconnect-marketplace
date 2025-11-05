@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-exclamation-triangle text-warning"></i> Expiring Products Alert
+    </h2>
+
+    {% if products %}
+    <div class="alert alert-warning">
+        <strong>⚠️ Action Required!</strong> You have {{ products|length }} product(s) expiring in the next 7 days.
+        Consider marking them for <a href="{{ url_for('emergency.vendor_dashboard') }}">Emergency Sale</a> to minimize losses.
+    </div>
+
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-6 mb-3">
+            <div class="card border-{{ product.urgency_color }}">
+                <div class="card-header bg-{{ product.urgency_color }} text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clock"></i> 
+                        {{ product.product_name }}
+                        <span class="badge bg-light text-dark float-end">
+                            {{ (product.expiry_date - now().date()).days }} days left
+                        </span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Expiry Date:</strong><br>
+                            {{ product.expiry_date.strftime('%d-%m-%Y') }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Quantity:</strong><br>
+                            {{ product.quantity }} {{ product.unit }}
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-6">
+                            <strong>Current Price:</strong><br>
+                            ₹{{ product.price }}/{{ product.unit }}
+                        </div>
+                        <div class="col-6">
+                            <strong>Status:</strong><br>
+                            {% if product.is_emergency %}
+                            <span class="badge bg-danger">In Emergency Sale</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Normal</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        {% if not product.is_emergency %}
+                        <a href="{{ url_for('emergency.mark_emergency', product_id=product.id) }}" 
+                           class="btn btn-danger btn-sm">
+                            <i class="fas fa-fire"></i> Mark for Emergency Sale
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('emergency.vendor_dashboard') }}" 
+                           class="btn btn-info btn-sm">
+                            <i class="fas fa-edit"></i> Edit Emergency Settings
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-success text-center">
+        <i class="fas fa-check-circle fa-3x mb-3"></i>
+        <h5>All Good!</h5>
+        <p>No products expiring in the next 7 days.</p>
+        <a href="{{ url_for('vendor.products') }}" class="btn btn-primary">
+            <i class="fas fa-box"></i> View All Products
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

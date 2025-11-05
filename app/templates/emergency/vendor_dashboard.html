@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Sales Dashboard - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2><i class="fas fa-fire text-danger"></i> Emergency Sales Dashboard</h2>
+    <p class="text-muted">Quickly sell expiring products at discounted prices to reduce waste</p>
+    
+    <!-- Metrics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-danger text-white">
+                <div class="card-body text-center">
+                    <h5>Active Emergency Sales</h5>
+                    <h2>{{ total_emergency }}</h2>
+                    <small>Products in emergency</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h5>Total Discount Given</h5>
+                    <h2>₹{{ "{:,.0f}".format(total_discount) }}</h2>
+                    <small>Savings for retailers</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h5>Current Sale Value</h5>
+                    <h2>₹{{ "{:,.0f}".format(total_current_value) }}</h2>
+                    <small>Emergency pricing</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h5>Original Value</h5>
+                    <h2>₹{{ "{:,.0f}".format(total_original_value) }}</h2>
+                    <small>Before discounts</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Active Emergency Products -->
+    {% if emergency_products %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-fire"></i> Active Emergency Sales</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Original Price</th>
+                                <th>Discount</th>
+                                <th>Sale Price</th>
+                                <th>Quantity</th>
+                                <th>Expires</th>
+                                <th>Marked On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in emergency_products %}
+                            <tr>
+                                <td><strong>{{ product.product_name }}</strong></td>
+                                <td>₹{{ "%.2f"|format(product.original_price_backup or product.price) }}/{{ product.unit }}</td>
+                                <td><span class="badge bg-danger">-{{ product.emergency_discount }}%</span></td>
+                                <td><strong class="text-success">₹{{ "%.2f"|format(product.price) }}/{{ product.unit }}</strong></td>
+                                <td>{{ product.quantity }} {{ product.unit }}</td>
+                                <td>
+                                    {% if product.days_until_expiry is not none %}
+                                        {% if product.days_until_expiry == 0 %}
+                                        <span class="badge bg-danger">TODAY</span>
+                                        {% elif product.days_until_expiry == 1 %}
+                                        <span class="badge bg-danger">TOMORROW</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">{{ product.days_until_expiry }} days</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if product.emergency_marked_at %}
+                                        {{ product.emergency_marked_at.strftime('%d-%m-%Y') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('emergency.remove_emergency', product_id=product.id) }}" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove from emergency marketplace?')">
+                                            <i class="fas fa-times"></i> Remove
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Eligible Products to Mark as Emergency -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Products Eligible for Emergency Sale</h5>
+                    <p class="text-muted mb-0 small">Products expiring within 3 days or close to expiry</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Expiry Date</th>
+                                <th>Days Left</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set found_eligible = namespace(value=False) %}
+                            {% for product in eligible_products %}
+                            {% if product.expiry_date and (product.expiry_date - now().date()).days <= 3 %}
+                            {% set found_eligible.value = True %}
+                            <tr class="table-warning">
+                                <td><strong>{{ product.product_name }}</strong></td>
+                                <td>₹{{ "%.2f"|format(product.price) }}/{{ product.unit }}</td>
+                                <td>{{ product.quantity }} {{ product.unit }}</td>
+                                <td>{{ product.expiry_date.strftime('%d-%m-%Y') }}</td>
+                                <td>
+                                    {% set days_left = (product.expiry_date - now().date()).days %}
+                                    <span class="badge {% if days_left == 0 %}bg-danger{% elif days_left == 1 %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                        {% if days_left == 0 %}TODAY{% elif days_left == 1 %}TOMORROW{% else %}{{ days_left }} days{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('emergency.mark_emergency', product_id=product.id) }}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-fire"></i> Mark Emergency
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if not found_eligible.value %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
+                                    <i class="fas fa-check-circle"></i> No products expiring soon. Great!
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info Box -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle"></i> About Emergency Marketplace</h5>
+                <ul class="mb-0">
+                    <li><strong>Reduce Waste:</strong> Sell products before they expire instead of throwing them away</li>
+                    <li><strong>Recover Costs:</strong> Get 30-70% of your original price instead of total loss</li>
+                    <li><strong>Help Retailers:</strong> Provide special deals to your regular customers</li>
+                    <li><strong>Discounts:</strong> Set discounts between 25% and 70% based on urgency</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

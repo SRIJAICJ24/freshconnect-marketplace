@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-plus-circle text-success"></i> Add New Product
+    </h2>
+    
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" class="form-control" name="product_name" required placeholder="e.g., Fresh Tomatoes">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Category *</label>
+                        <select class="form-select" name="category" required>
+                            <option value="">-- Select Category --</option>
+                            <option value="Vegetables">🥕 Vegetables</option>
+                            <option value="Fruits">🍎 Fruits</option>
+                            <option value="Flowers">🌸 Flowers</option>
+                            <option value="Grains">🌾 Grains</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Price (₹) *</label>
+                        <input type="number" class="form-control" name="price" step="0.01" required placeholder="Per unit">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Quantity *</label>
+                        <input type="number" class="form-control" name="quantity" step="0.01" required placeholder="Available">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Unit *</label>
+                        <select class="form-select" name="unit" required>
+                            <option value="kg">Kilogram (kg)</option>
+                            <option value="bunch">Bunch</option>
+                            <option value="piece">Piece</option>
+                            <option value="liter">Liter</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Expiry Date</label>
+                        <input type="date" class="form-control" name="expiry_date">
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Product Image</label>
+                        <input type="file" class="form-control" name="image" accept="image/*">
+                    </div>
+                </div>
+                
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h6 class="mb-3">Minimum Order Quantity (MOQ)</h6>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="moq_enabled" id="moqEnabled">
+                            <label class="form-check-label" for="moqEnabled">
+                                Enable MOQ Requirements
+                            </label>
+                        </div>
+                        
+                        <div id="moqSettings" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">MOQ Type</label>
+                                    <select class="form-select" name="moq_type">
+                                        <option value="quantity">By Quantity</option>
+                                        <option value="weight">By Weight</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Minimum Quantity</label>
+                                    <input type="number" class="form-control" name="minimum_quantity" step="0.01" placeholder="e.g., 50">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Add Product
+                    </button>
+                    <a href="/vendor/products" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('moqEnabled').addEventListener('change', function() {
+    document.getElementById('moqSettings').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+{% endblock %}

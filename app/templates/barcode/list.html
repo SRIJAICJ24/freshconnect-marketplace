@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Barcode History - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-list"></i> Barcode History</h2>
+    
+    <ul class="nav nav-tabs mb-4" id="barcodeTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incoming" type="button">
+                <i class="fas fa-inbox"></i> Incoming ({{ incoming|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoing" type="button">
+                <i class="fas fa-paper-plane"></i> Outgoing ({{ outgoing|length }})
+            </button>
+        </li>
+    </ul>
+    
+    <div class="tab-content" id="barcodeTabContent">
+        <!-- Incoming Barcodes -->
+        <div class="tab-pane fade show active" id="incoming" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    {% if incoming %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Barcode</th>
+                                        <th>Product</th>
+                                        <th>From</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for barcode in incoming %}
+                                    <tr>
+                                        <td><code>{{ barcode.barcode_number }}</code></td>
+                                        <td>{{ barcode.product.product_name if barcode.product else 'N/A' }}</td>
+                                        <td>{{ barcode.sender.name if barcode.sender else 'N/A' }}</td>
+                                        <td>{{ barcode.quantity }} {{ barcode.unit }}</td>
+                                        <td>
+                                            {% if barcode.status == 'added_to_stock' %}
+                                                <span class="badge bg-success">✓ Added to Stock</span>
+                                            {% elif barcode.status == 'scanned' %}
+                                                <span class="badge bg-warning">⏳ Scanned</span>
+                                            {% elif barcode.status == 'in_transit' %}
+                                                <span class="badge bg-info">🚚 In Transit</span>
+                                            {% elif barcode.status == 'rejected' %}
+                                                <span class="badge bg-danger">❌ Rejected</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ barcode.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No incoming barcodes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Outgoing Barcodes -->
+        <div class="tab-pane fade" id="outgoing" role="tabpanel">
+            <div class="card">
+                <div class="card-body">
+                    {% if outgoing %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Barcode</th>
+                                        <th>Product</th>
+                                        <th>To</th>
+                                        <th>Quantity</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for barcode in outgoing %}
+                                    <tr>
+                                        <td><code>{{ barcode.barcode_number }}</code></td>
+                                        <td>{{ barcode.product.product_name if barcode.product else 'N/A' }}</td>
+                                        <td>{{ barcode.receiver.name if barcode.receiver else 'N/A' }}</td>
+                                        <td>{{ barcode.quantity }} {{ barcode.unit }}</td>
+                                        <td>
+                                            {% if barcode.status == 'added_to_stock' %}
+                                                <span class="badge bg-success">✓ Delivered</span>
+                                            {% elif barcode.status == 'scanned' %}
+                                                <span class="badge bg-warning">⏳ Scanned by Receiver</span>
+                                            {% elif barcode.status == 'in_transit' %}
+                                                <span class="badge bg-info">🚚 In Transit</span>
+                                            {% elif barcode.status == 'rejected' %}
+                                                <span class="badge bg-danger">❌ Rejected</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ barcode.created_at.strftime('%d-%m-%Y %H:%M') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4">No outgoing barcodes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

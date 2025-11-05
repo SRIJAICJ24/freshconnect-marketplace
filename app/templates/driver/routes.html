@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+
+{% block title %}My Routes - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-route text-primary"></i> My Planned Routes
+    </h2>
+    
+    <!-- Driver Info Card -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Driver:</strong> {{ driver.user.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Vehicle:</strong> {{ driver.vehicle_type }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Registration:</strong> {{ driver.vehicle_registration }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if driver.status == 'available' else 'warning' }}">
+                                {{ driver.status }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if routes %}
+        <div class="row">
+            {% for route in routes %}
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm h-100 {% if route.status == 'available' %}border-success{% endif %}">
+                    <div class="card-header bg-{% if route.status == 'available' %}success{% elif route.status == 'in_progress' %}warning{% else %}secondary{% endif %} text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map-marked-alt"></i> Route {{ loop.index }}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Route Details -->
+                        <div class="mb-3">
+                            <h6 class="text-success"><i class="fas fa-map-marker-alt"></i> Starting Location:</h6>
+                            <p class="mb-1"><strong>{{ route.starting_location }}</strong></p>
+                            <small class="text-muted">
+                                Lat: {{ route.start_lat }}, Lng: {{ route.start_lng }}
+                            </small>
+                        </div>
+                        
+                        <div class="text-center my-3">
+                            <i class="fas fa-arrow-down fa-2x text-primary"></i>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h6 class="text-danger"><i class="fas fa-map-marker-alt"></i> Ending Location:</h6>
+                            <p class="mb-1"><strong>{{ route.ending_location }}</strong></p>
+                            <small class="text-muted">
+                                Lat: {{ route.end_lat }}, Lng: {{ route.end_lng }}
+                            </small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Route Stats -->
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <i class="fas fa-road text-info"></i><br>
+                                <strong>{{ route.total_distance_km }} km</strong><br>
+                                <small class="text-muted">Distance</small>
+                            </div>
+                            <div class="col-6">
+                                <i class="fas fa-clock text-warning"></i><br>
+                                <strong>{{ route.estimated_time_hours }} hrs</strong><br>
+                                <small class="text-muted">Est. Time</small>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Status Badge -->
+                        <div class="text-center">
+                            {% if route.status == 'available' %}
+                                <span class="badge bg-success fs-6">✓ Available for Assignments</span>
+                            {% elif route.status == 'in_progress' %}
+                                <span class="badge bg-warning fs-6">🚛 In Progress</span>
+                            {% else %}
+                                <span class="badge bg-secondary fs-6">Completed</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if route.current_stops %}
+                        <div class="mt-3">
+                            <small class="text-muted">Current Stops: {{ route.current_stops }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle fa-3x mb-3"></i>
+            <h5>No Routes Assigned Yet</h5>
+            <p class="mb-0">Routes will be assigned when orders are placed in your service area.</p>
+        </div>
+    {% endif %}
+    
+    <!-- Navigation -->
+    <div class="mt-4">
+        <a href="{{ url_for('driver.dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <a href="{{ url_for('driver.deliveries') }}" class="btn btn-primary">
+            <i class="fas fa-truck"></i> View Deliveries
+        </a>
+    </div>
+</div>
+{% endblock %}

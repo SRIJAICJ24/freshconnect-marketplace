@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product.product_name }} - Emergency Deal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Product Image & Info -->
+        <div class="col-md-6">
+            <div class="card shadow">
+                <img src="https://via.placeholder.com/500x400?text={{ product.product_name }}" 
+                     class="card-img-top" alt="{{ product.product_name }}">
+                
+                {% if urgency %}
+                <div class="card-body">
+                    <div class="alert alert-{{ urgency.color }} mb-0">
+                        <h5>{{ urgency.icon }} {{ urgency.status }}</h5>
+                        <p class="mb-0"><strong>{{ urgency.message }}</strong></p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1>{{ product.product_name }}</h1>
+            <p class="text-muted"><i class="fas fa-store"></i> {{ product.vendor.business_name }}</p>
+            
+            <!-- Pricing -->
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6">
+                            <p class="text-muted mb-1">Original Price:</p>
+                            <h5 class="text-muted" style="text-decoration: line-through;">
+                                ₹{{ "%.2f"|format(original_price) }}/{{ product.unit }}
+                            </h5>
+                        </div>
+                        <div class="col-6">
+                            <p class="mb-1">Emergency Price:</p>
+                            <h3 class="text-success mb-0">
+                                ₹{{ "%.2f"|format(product.price) }}/{{ product.unit }}
+                            </h3>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <span class="badge bg-danger fs-6">
+                                Save {{ product.emergency_discount }}%
+                            </span>
+                        </div>
+                        <div class="col-6 text-end">
+                            <strong class="text-success">
+                                You save: ₹{{ "%.2f"|format((original_price - product.price) * product.quantity) }}
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Product Info -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5>Product Information</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Category:</th>
+                            <td>{{ product.category }}</td>
+                        </tr>
+                        <tr>
+                            <th>Available Quantity:</th>
+                            <td><strong>{{ product.quantity }} {{ product.unit }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th>Unit:</th>
+                            <td>{{ product.unit }}</td>
+                        </tr>
+                        {% if product.expiry_date %}
+                        <tr>
+                            <th>Expiry Date:</th>
+                            <td>
+                                <strong>{{ product.expiry_date.strftime('%d-%m-%Y') }}</strong>
+                                {% if product.days_until_expiry is not none %}
+                                <span class="badge bg-warning text-dark ms-2">
+                                    {{ product.days_until_expiry }} days left
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if product.moq_enabled %}
+                        <tr>
+                            <th>Minimum Order:</th>
+                            <td>
+                                {% if product.moq_type == 'quantity' %}
+                                {{ product.minimum_quantity }} {{ product.unit }}
+                                {% elif product.moq_type == 'weight' %}
+                                {{ product.minimum_weight }} kg
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                    
+                    {% if product.description %}
+                    <hr>
+                    <h6>Description:</h6>
+                    <p>{{ product.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Add to Cart Form -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5>Add to Cart</h5>
+                    <form method="POST" action="/retailer/add-to-cart">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Quantity ({{ product.unit }})</label>
+                            <input type="number" name="quantity" class="form-control" 
+                                   min="{% if product.moq_enabled and product.moq_type == 'quantity' %}{{ product.minimum_quantity }}{% else %}1{% endif %}" 
+                                   max="{{ product.quantity }}" 
+                                   value="{% if product.moq_enabled and product.moq_type == 'quantity' %}{{ product.minimum_quantity }}{% else %}10{% endif %}" 
+                                   step="0.1" 
+                                   oninput="calculateTotal(this.value)">
+                            {% if product.moq_enabled %}
+                            <small class="text-muted">
+                                Minimum order: 
+                                {% if product.moq_type == 'quantity' %}
+                                {{ product.minimum_quantity }} {{ product.unit }}
+                                {% elif product.moq_type == 'weight' %}
+                                {{ product.minimum_weight }} kg
+                                {% endif %}
+                            </small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="alert alert-success">
+                            <strong>Total Price:</strong>
+                            <h4 class="mb-0" id="total-price">
+                                ₹{{ "%.2f"|format(product.price * (product.minimum_quantity if product.moq_enabled and product.moq_type == 'quantity' else 10)) }}
+                            </h4>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-danger w-100 btn-lg">
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                        
+                        <a href="{{ url_for('emergency.marketplace') }}" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="fas fa-arrow-left"></i> Back to Marketplace
+                        </a>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Warning -->
+            <div class="alert alert-warning mt-3">
+                <i class="fas fa-exclamation-triangle"></i> <strong>Limited Time Deal!</strong><br>
+                This product is in emergency sale due to approaching expiry. Purchase soon to get this amazing discount!
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const pricePerUnit = {{ product.price }};
+
+function calculateTotal(quantity) {
+    const total = pricePerUnit * quantity;
+    document.getElementById('total-price').textContent = '₹' + total.toFixed(2);
+}
+</script>
+{% endblock %}

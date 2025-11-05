@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Confirmation - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">📦 Order Confirmation - 4 Steps</h2>
+    
+    <div class="alert alert-success">
+        <strong>✓ Order Successfully Created!</strong> Order #{{ order.id }}
+    </div>
+    
+    <!-- Step Timeline -->
+    <div class="row mb-5">
+        {% for step in steps %}
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 {% if step.status == 'completed' %}border-success bg-success text-white{% else %}border-secondary{% endif %}">
+                <div class="card-body text-center">
+                    <h1 class="mb-3">
+                        {% if step.step_number == 1 %}
+                            <i class="fas fa-check-circle"></i>
+                        {% elif step.step_number == 2 %}
+                            <i class="fas fa-credit-card"></i>
+                        {% elif step.step_number == 3 %}
+                            <i class="fas fa-truck"></i>
+                        {% else %}
+                            <i class="fas fa-box-open"></i>
+                        {% endif %}
+                    </h1>
+                    <h5><strong>Step {{ step.step_number }}</strong></h5>
+                    <p class="mb-2">{{ step.step_name }}</p>
+                    <small class="{% if step.status == 'completed' %}text-white-50{% else %}text-muted{% endif %}">
+                        {% if step.status == 'completed' %}✓ Completed{% else %}⏳ Pending{% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Detailed Information -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Step 1: Order Confirmed -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Step 1: Order Confirmed</h5>
+                </div>
+                <div class="card-body">
+                    {% set step1 = steps[0] %}
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Product:</strong> {{ step1.details.product_name }}</p>
+                            <p><strong>Quantity:</strong> {{ step1.details.quantity }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Volume:</strong> {{ step1.details.volume }}</p>
+                            <p><strong>Weight:</strong> {{ step1.details.weight }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Payment & Driver Assignment -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-credit-card"></i> Step 2: Payment Done - Driver Assigned</h5>
+                </div>
+                <div class="card-body">
+                    {% set step2 = steps[1] %}
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Payment Status:</strong> {{ step2.details.payment_status }}
+                    </div>
+                    
+                    <h6 class="text-success"><i class="fas fa-truck"></i> Driver Details:</h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <p><strong>Driver:</strong> {{ step2.details.driver_name }}</p>
+                            <p><strong>Vehicle:</strong> {{ step2.details.vehicle }}</p>
+                        </div>
+                        <div class="col-6">
+                            <p><strong>Route:</strong> {{ step2.details.route }}</p>
+                            <p><strong>Est. Time:</strong> {{ step2.details.estimated_time }}</p>
+                        </div>
+                    </div>
+                    <p><strong>Parking Location:</strong> {{ step2.details.parking_location }}</p>
+                    
+                    {% if driver_info and driver_info.route_details %}
+                    <div class="mt-3">
+                        <small class="text-muted">Distance: {{ driver_info.route_details.distance_km }} km</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Step 3: Product Shipped -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-truck"></i> Step 3: Product Shipped</h5>
+                </div>
+                <div class="card-body">
+                    {% set step3 = steps[2] %}
+                    <p><strong>Status:</strong> {{ step3.details.location }}</p>
+                    <p><strong>Vendor:</strong> {{ step3.details.vendor }}</p>
+                    <p><strong>Pickup Time:</strong> {{ step3.details.time }}</p>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> Vendor will confirm pickup and generate barcode for tracking
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 4: Order Delivered -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-box-open"></i> Step 4: Order Delivered</h5>
+                </div>
+                <div class="card-body">
+                    {% set step4 = steps[3] %}
+                    <p><strong>Delivery Location:</strong> {{ step4.details.location }}</p>
+                    <p><strong>Expected:</strong> {{ step4.details.time }}</p>
+                    <p><strong>Driver Rating:</strong> {{ step4.details.driver_rating }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pricing Breakdown Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-calculator"></i> Pricing Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    {% if driver_info and driver_info.pricing %}
+                    <div class="pricing-details">
+                        <div class="row mb-2">
+                            <div class="col-8"><strong>Product Cost:</strong></div>
+                            <div class="col-4 text-end">₹{{ "%.2f"|format(driver_info.pricing.product_cost) }}</div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row mb-2">
+                            <div class="col-8 text-muted">Volume Charge:</div>
+                            <div class="col-4 text-end text-muted">₹{{ "%.2f"|format(driver_info.pricing.volume_charge) }}</div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-8 text-muted">Driver Rate:</div>
+                            <div class="col-4 text-end text-muted">₹{{ "%.2f"|format(driver_info.pricing.driver_rate) }}</div>
+                        </div>
+                        
+                        <div class="row mb-2">
+                            <div class="col-8 text-muted">Detour Charge:</div>
+                            <div class="col-4 text-end text-muted">₹{{ "%.2f"|format(driver_info.pricing.detour_charge) }}</div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="row mb-3">
+                            <div class="col-8"><strong>Logistics Total:</strong></div>
+                            <div class="col-4 text-end"><strong>₹{{ "%.2f"|format(driver_info.pricing.total_logistics) }}</strong></div>
+                        </div>
+                        
+                        <hr class="my-3">
+                        
+                        <div class="row mb-4">
+                            <div class="col-8"><h5 class="mb-0">TOTAL:</h5></div>
+                            <div class="col-4 text-end"><h5 class="text-success mb-0">₹{{ "%.2f"|format(driver_info.pricing.final_amount) }}</h5></div>
+                        </div>
+                    {% else %}
+                    <div class="row mb-4">
+                        <div class="col-8"><h5 class="mb-0">TOTAL:</h5></div>
+                        <div class="col-4 text-end"><h5 class="text-success mb-0">₹{{ "%.2f"|format(order.total_amount) }}</h5></div>
+                    </div>
+                    {% endif %}
+                        
+                        <button class="btn btn-success btn-lg w-100 mb-2" onclick="proceedToPayment()">
+                            <i class="fas fa-credit-card"></i> Proceed to Payment
+                        </button>
+                        
+                        <a href="{{ url_for('retailer.orders') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-list"></i> View All Orders
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mt-3">
+                        <h6>Smart Features:</h6>
+                        <ul class="small mb-0">
+                            <li>✓ Location-based driver assignment</li>
+                            <li>✓ Dynamic pricing calculation</li>
+                            <li>✓ Route optimization</li>
+                            <li>✓ Volume & weight based charges</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function proceedToPayment() {
+    window.location.href = '/payment/checkout/{{ order.id }}';
+}
+</script>
+{% endblock %}

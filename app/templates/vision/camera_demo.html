@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Camera Product Recognition - Demo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-camera text-primary"></i> Product Recognition Camera
+    </h2>
+
+    <div class="alert alert-info">
+        <strong><i class="fas fa-info-circle"></i> How to use:</strong>
+        <ol class="mb-0">
+            <li>Click "Start Camera" to activate your webcam</li>
+            <li>Point camera at the product</li>
+            <li>Click "Capture & Analyze" to identify the product</li>
+            <li>AI will auto-fill product details!</li>
+        </ol>
+    </div>
+
+    <div class="row">
+        <!-- Camera Preview -->
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-video"></i> Camera Feed
+                    </h5>
+                </div>
+                <div class="card-body text-center p-0">
+                    <div id="cameraContainer" style="position: relative; background: #000;">
+                        <video id="cameraVideo" autoplay playsinline style="width: 100%; max-height: 500px;"></video>
+                        <canvas id="cameraCanvas" style="display: none;"></canvas>
+                        
+                        <div id="cameraPlaceholder" class="p-5" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-camera fa-5x mb-3"></i>
+                                <h5>Camera Not Started</h5>
+                                <p>Click "Start Camera" button below</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-grid gap-2">
+                        <button id="startCameraBtn" class="btn btn-success btn-lg">
+                            <i class="fas fa-play"></i> Start Camera
+                        </button>
+                        <button id="captureBtn" class="btn btn-primary btn-lg" disabled>
+                            <i class="fas fa-camera-retro"></i> Capture & Analyze
+                        </button>
+                        <button id="stopCameraBtn" class="btn btn-danger" disabled>
+                            <i class="fas fa-stop"></i> Stop Camera
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain"></i> AI Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="loadingIndicator" style="display: none;" class="text-center p-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Analyzing...</span>
+                        </div>
+                        <p class="mt-2">Analyzing image...</p>
+                    </div>
+
+                    <div id="resultsContainer" style="display: none;">
+                        <h6>Identified Product:</h6>
+                        <div class="alert alert-success">
+                            <h5 id="productName">-</h5>
+                            <span id="productCategory" class="badge bg-primary">-</span>
+                            <span id="productConfidence" class="badge bg-info">-</span>
+                        </div>
+
+                        <h6>Details:</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Category:</th>
+                                <td id="categoryValue">-</td>
+                            </tr>
+                            <tr>
+                                <th>Unit:</th>
+                                <td id="unitValue">-</td>
+                            </tr>
+                            <tr>
+                                <th>Est. Weight:</th>
+                                <td id="weightValue">-</td>
+                            </tr>
+                            <tr>
+                                <th>Quality:</th>
+                                <td id="qualityValue">-</td>
+                            </tr>
+                            <tr>
+                                <th>Price Range:</th>
+                                <td id="priceValue">-</td>
+                            </tr>
+                        </table>
+
+                        <h6>Description:</h6>
+                        <p id="descriptionValue" class="small">-</p>
+
+                        <h6>Storage Tips:</h6>
+                        <p id="storageValue" class="small">-</p>
+
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('vendor.add_product') }}" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Use in Add Product Form
+                            </a>
+                        </div>
+                    </div>
+
+                    <div id="placeholderText" class="text-center text-muted p-4">
+                        <i class="fas fa-image fa-3x mb-3"></i>
+                        <p>Capture an image to see AI analysis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/camera-handler.js') }}"></script>
+<script>
+let cameraHandler;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const startBtn = document.getElementById('startCameraBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const stopBtn = document.getElementById('stopCameraBtn');
+    const placeholder = document.getElementById('cameraPlaceholder');
+
+    // Initialize camera handler
+    cameraHandler = new CameraHandler(video, canvas);
+
+    // Start Camera
+    startBtn.addEventListener('click', async function() {
+        const result = await cameraHandler.startCamera();
+        
+        if (result.success) {
+            placeholder.style.display = 'none';
+            video.style.display = 'block';
+            startBtn.disabled = true;
+            captureBtn.disabled = false;
+            stopBtn.disabled = false;
+            showNotification('Camera started successfully!', 'success');
+        } else {
+            showNotification(result.message, 'danger');
+        }
+    });
+
+    // Capture and Analyze
+    captureBtn.addEventListener('click', async function() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('resultsContainer').style.display = 'none';
+        document.getElementById('placeholderText').style.display = 'none';
+
+        const result = await cameraHandler.captureAndAnalyze();
+
+        document.getElementById('loadingIndicator').style.display = 'none';
+
+        if (result.success && result.product_info) {
+            displayResults(result.product_info);
+        } else {
+            showNotification(result.message || 'Error analyzing image', 'danger');
+            document.getElementById('placeholderText').style.display = 'block';
+        }
+    });
+
+    // Stop Camera
+    stopBtn.addEventListener('click', function() {
+        cameraHandler.stopCamera();
+        video.style.display = 'none';
+        placeholder.style.display = 'flex';
+        startBtn.disabled = false;
+        captureBtn.disabled = true;
+        stopBtn.disabled = true;
+        showNotification('Camera stopped', 'info');
+    });
+
+    function displayResults(productInfo) {
+        document.getElementById('resultsContainer').style.display = 'block';
+        
+        document.getElementById('productName').textContent = productInfo.product_name || 'Unknown';
+        document.getElementById('productCategory').textContent = productInfo.category || '-';
+        document.getElementById('productConfidence').textContent = productInfo.confidence || '-';
+        
+        document.getElementById('categoryValue').textContent = productInfo.category || '-';
+        document.getElementById('unitValue').textContent = productInfo.unit || '-';
+        document.getElementById('weightValue').textContent = productInfo.estimated_weight_per_unit + ' kg' || '-';
+        document.getElementById('qualityValue').textContent = productInfo.quality_assessment || '-';
+        document.getElementById('priceValue').textContent = '₹' + (productInfo.suggested_price_range || '-');
+        document.getElementById('descriptionValue').textContent = productInfo.description || '-';
+        document.getElementById('storageValue').textContent = productInfo.storage_tips || '-';
+    }
+});
+</script>
+
+<style>
+#cameraPlaceholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+#cameraVideo {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+</style>
+
+{% endblock %}

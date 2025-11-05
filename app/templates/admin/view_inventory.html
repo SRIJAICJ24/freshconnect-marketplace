@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-warehouse text-primary"></i> Inventory Management
+        </h2>
+        <a href="{{ url_for('admin_inventory.create_stock') }}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Create New Stock
+        </a>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="text-primary mb-0">{{ total_stocks }}</h3>
+                    <small class="text-muted">Total Stocks</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h3 class="text-warning mb-0">{{ unclaimed }}</h3>
+                    <small class="text-muted">Unclaimed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h3 class="text-success mb-0">{{ claimed }}</h3>
+                    <small class="text-muted">Claimed by Vendors</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'all' %}active{% endif %}" 
+                       href="{{ url_for('admin_inventory.view_stocks', filter='all') }}">
+                        All Stocks
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'unclaimed' %}active{% endif %}" 
+                       href="{{ url_for('admin_inventory.view_stocks', filter='unclaimed') }}">
+                        Unclaimed
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if filter_type == 'claimed' %}active{% endif %}" 
+                       href="{{ url_for('admin_inventory.view_stocks', filter='claimed') }}">
+                        Claimed
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body p-0">
+            {% if stocks %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Barcode</th>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Claimed By</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in stocks %}
+                        <tr>
+                            <td>
+                                <code class="fs-6">{{ stock.admin_generated_code }}</code>
+                            </td>
+                            <td>
+                                <strong>{{ stock.product_name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ stock.category }}</small>
+                            </td>
+                            <td>{{ stock.weight }} {{ stock.unit }}</td>
+                            <td class="text-success fw-bold">₹{{ "%.2f"|format(stock.price) }}</td>
+                            <td>
+                                {% if stock.is_claimed_by_vendor %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Claimed
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock"></i> Unclaimed
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if stock.is_claimed_by_vendor %}
+                                <small>
+                                    {{ stock.claimed_by_vendor.business_name or stock.claimed_by_vendor.name }}
+                                    <br>
+                                    <span class="text-muted">
+                                        {{ stock.claimed_at.strftime('%d %b, %I:%M %p') }}
+                                    </span>
+                                </small>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>{{ stock.created_at.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                {% if not stock.is_claimed_by_vendor %}
+                                <form method="POST" action="{{ url_for('admin_inventory.delete_stock', stock_id=stock.id) }}" 
+                                      style="display: inline;"
+                                      onsubmit="return confirm('Delete this stock?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <a href="{{ url_for('vendor.products') }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">No stocks found</h5>
+                <p class="text-muted">Create your first inventory stock to get started!</p>
+                <a href="{{ url_for('admin_inventory.create_stock') }}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Create Stock
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+code {
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #d63384;
+}
+</style>
+{% endblock %}

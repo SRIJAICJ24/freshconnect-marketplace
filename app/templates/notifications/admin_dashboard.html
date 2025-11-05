@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">
+        <i class="fas fa-bell text-primary"></i> Notification Management
+    </h2>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <h6>Expiring Soon (7 days)</h6>
+                    <h2>{{ stats.expiring_soon }}</h2>
+                    <small>Products need attention</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6>In Emergency Sale</h6>
+                    <h2>{{ stats.in_emergency }}</h2>
+                    <small>Currently discounted</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <h6>Already Expired</h6>
+                    <h2>{{ stats.already_expired }}</h2>
+                    <small>Auto-hidden products</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-cog"></i> Manual Actions
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Send Notifications Now</h6>
+                    <p>Manually trigger expiry notifications to all vendors with expiring products.</p>
+                    <form method="POST" action="{{ url_for('notifications.admin_trigger') }}">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-paper-plane"></i> Send Notifications Now
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <h6>Automated Task</h6>
+                    <p>Set up daily cron job to run automatically:</p>
+                    <code>python run_daily_notifications.py</code>
+                    <br><br>
+                    <small class="text-muted">
+                        For production: Schedule this to run daily at 9:00 AM
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="alert alert-info">
+        <h6><i class="fas fa-info-circle"></i> How It Works:</h6>
+        <ul class="mb-0">
+            <li>System checks for products expiring within 7 days</li>
+            <li>Sends email notifications to vendors</li>
+            <li>Automatically hides expired products</li>
+            <li>Vendors can mark products for emergency sale</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

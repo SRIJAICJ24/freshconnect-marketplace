@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-11 mx-auto">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-barcode text-primary"></i> Scan & Add Products
+                </h2>
+                <a href="{{ url_for('vendor.products') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Products
+                </a>
+            </div>
+            
+            <!-- Info Alert -->
+            <div class="alert alert-success mb-4">
+                <i class="fas fa-info-circle"></i> 
+                <strong>Easy Steps:</strong> Click "Copy" button → Barcode auto-fills → Click "Add to Inventory" → Confirm!
+            </div>
+            
+            <div class="row">
+                <!-- Left: Available Barcodes -->
+                <div class="col-lg-7 mb-4">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list"></i> Available Products ({{ available_stocks|length }})
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if available_stocks %}
+                            <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light sticky-top">
+                                        <tr>
+                                            <th>Barcode</th>
+                                            <th>Product</th>
+                                            <th>Quantity</th>
+                                            <th>Price</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for stock in available_stocks %}
+                                        <tr>
+                                            <td>
+                                                <code class="barcode-code">{{ stock.admin_generated_code }}</code>
+                                            </td>
+                                            <td>
+                                                <strong>{{ stock.product_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ stock.category }}</small>
+                                            </td>
+                                            <td>{{ stock.weight }} {{ stock.unit }}</td>
+                                            <td class="text-success fw-bold">₹{{ "%.2f"|format(stock.price) }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary copy-btn" 
+                                                        data-barcode="{{ stock.admin_generated_code }}"
+                                                        data-name="{{ stock.product_name }}"
+                                                        data-category="{{ stock.category }}"
+                                                        data-weight="{{ stock.weight }}"
+                                                        data-unit="{{ stock.unit }}"
+                                                        data-price="{{ stock.price }}">
+                                                    <i class="fas fa-copy"></i> Copy
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                                <h5 class="text-muted">No products available</h5>
+                                <p class="text-muted">Contact admin to create inventory stocks</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right: Scan/Paste Area -->
+                <div class="col-lg-5 mb-4">
+                    <div class="card shadow-lg border-0 sticky-top" style="top: 20px;">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-qrcode"></i> Paste Barcode Here
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <!-- Barcode Input -->
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Barcode</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="fas fa-barcode"></i>
+                                    </span>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="barcodeInput" 
+                                           placeholder="Click Copy button or paste here..."
+                                           autofocus>
+                                </div>
+                            </div>
+                            
+                            <!-- Product Preview -->
+                            <div id="productPreview" class="alert alert-light border d-none mb-3">
+                                <h6 class="fw-bold mb-2">
+                                    <i class="fas fa-box"></i> Product Details:
+                                </h6>
+                                <div id="previewContent"></div>
+                            </div>
+                            
+                            <!-- Loading Spinner -->
+                            <div id="loadingSpinner" class="text-center d-none mb-3">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Processing...</p>
+                            </div>
+                            
+                            <button class="btn btn-success btn-lg w-100 mb-2" onclick="showConfirmation()">
+                                <i class="fas fa-plus-circle"></i> Add to Inventory
+                            </button>
+                            
+                            <small class="text-muted d-block text-center">
+                                <i class="fas fa-lightbulb"></i> 
+                                Click Copy → Confirm → Product Added!
+                            </small>
+                        </div>
+                        
+                        <!-- Stats -->
+                        <div class="card-footer bg-light">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h4 class="text-success mb-0">{{ claimed_stocks|length }}</h4>
+                                    <small class="text-muted">Your Products</small>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-info mb-0">{{ available_stocks|length }}</h4>
+                                    <small class="text-muted">Available</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Claims -->
+            {% if claimed_stocks %}
+            <div class="card shadow mt-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Your Recently Added Products
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Barcode</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Added At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in claimed_stocks[:5] %}
+                                <tr>
+                                    <td><code>{{ stock.admin_generated_code }}</code></td>
+                                    <td>
+                                        <strong>{{ stock.product_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ stock.category }}</small>
+                                    </td>
+                                    <td>{{ stock.weight }} {{ stock.unit }}</td>
+                                    <td class="text-success fw-bold">₹{{ "%.2f"|format(stock.price) }}</td>
+                                    <td><small>{{ stock.claimed_at.strftime('%d %b %Y, %I:%M %p') }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle"></i> Confirm Add to Inventory
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="fas fa-box fa-3x text-success mb-3"></i>
+                </div>
+                <h6 class="fw-bold mb-3">Are you sure you want to add this product?</h6>
+                <div id="confirmProductDetails" class="alert alert-light border">
+                    <!-- Product details will be inserted here -->
+                </div>
+                <p class="text-muted small mb-0">
+                    <i class="fas fa-info-circle"></i> 
+                    This product will be added to your inventory and you can start selling it.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-success" onclick="confirmClaim()">
+                    <i class="fas fa-check"></i> Yes, Add to Inventory
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentProductData = null;
+
+// Auto-focus on barcode input
+document.getElementById('barcodeInput').focus();
+
+// Copy button click handler
+document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const barcode = this.dataset.barcode;
+        const name = this.dataset.name;
+        const category = this.dataset.category;
+        const weight = this.dataset.weight;
+        const unit = this.dataset.unit;
+        const price = this.dataset.price;
+        
+        // Fill the input
+        document.getElementById('barcodeInput').value = barcode;
+        
+        // Store product data
+        currentProductData = {
+            barcode: barcode,
+            name: name,
+            category: category,
+            weight: weight,
+            unit: unit,
+            price: parseFloat(price)
+        };
+        
+        // Show preview
+        showProductPreview(currentProductData);
+        
+        // Visual feedback
+        this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        this.classList.remove('btn-primary');
+        this.classList.add('btn-success');
+        
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-copy"></i> Copy';
+            this.classList.remove('btn-success');
+            this.classList.add('btn-primary');
+        }, 2000);
+        
+        // Scroll to input area
+        document.getElementById('barcodeInput').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+});
+
+// Check barcode as user types (debounced)
+let checkTimeout;
+document.getElementById('barcodeInput').addEventListener('input', function(e) {
+    clearTimeout(checkTimeout);
+    const barcode = e.target.value.trim();
+    
+    if (barcode.length >= 5) {
+        checkTimeout = setTimeout(() => {
+            checkBarcodeAvailability(barcode);
+        }, 500);
+    } else {
+        document.getElementById('productPreview').classList.add('d-none');
+        currentProductData = null;
+    }
+});
+
+// Allow Enter key to submit
+document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        showConfirmation();
+    }
+});
+
+function checkBarcodeAvailability(barcode) {
+    fetch(`/vendor/barcode/check/${barcode}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists && data.available) {
+                currentProductData = {
+                    barcode: barcode,
+                    name: data.product.name,
+                    category: data.product.category,
+                    weight: data.product.weight,
+                    unit: data.product.unit,
+                    price: data.product.price
+                };
+                showProductPreview(currentProductData);
+            } else if (data.exists && !data.available) {
+                showError('Already Claimed: ' + data.message);
+                currentProductData = null;
+            } else {
+                showError('Barcode not found');
+                currentProductData = null;
+            }
+        })
+        .catch(error => {
+            console.error('Error checking barcode:', error);
+        });
+}
+
+function showProductPreview(product) {
+    const preview = document.getElementById('productPreview');
+    const content = document.getElementById('previewContent');
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-6">
+                <strong>Name:</strong><br>${product.name}
+            </div>
+            <div class="col-6">
+                <strong>Category:</strong><br>${product.category}
+            </div>
+        </div>
+        <hr class="my-2">
+        <div class="row">
+            <div class="col-6">
+                <strong>Quantity:</strong><br>${product.weight} ${product.unit}
+            </div>
+            <div class="col-6">
+                <strong>Price:</strong><br>₹${product.price.toFixed(2)}
+            </div>
+        </div>
+    `;
+    
+    preview.classList.remove('d-none', 'alert-danger');
+    preview.classList.add('alert-success');
+}
+
+function showError(message) {
+    const preview = document.getElementById('productPreview');
+    const content = document.getElementById('previewContent');
+    
+    content.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i> 
+        <strong>${message}</strong>
+    `;
+    
+    preview.classList.remove('d-none', 'alert-success');
+    preview.classList.add('alert-danger');
+}
+
+function showConfirmation() {
+    const barcode = document.getElementById('barcodeInput').value.trim();
+    
+    if (!barcode) {
+        alert('Please enter or copy a barcode first!');
+        return;
+    }
+    
+    if (!currentProductData) {
+        alert('Please wait while we verify the barcode...');
+        checkBarcodeAvailability(barcode);
+        return;
+    }
+    
+    // Show confirmation modal
+    const confirmDetails = document.getElementById('confirmProductDetails');
+    confirmDetails.innerHTML = `
+        <table class="table table-sm mb-0">
+            <tr>
+                <th width="40%">Barcode:</th>
+                <td><code>${currentProductData.barcode}</code></td>
+            </tr>
+            <tr>
+                <th>Product:</th>
+                <td><strong>${currentProductData.name}</strong></td>
+            </tr>
+            <tr>
+                <th>Category:</th>
+                <td>${currentProductData.category}</td>
+            </tr>
+            <tr>
+                <th>Quantity:</th>
+                <td>${currentProductData.weight} ${currentProductData.unit}</td>
+            </tr>
+            <tr>
+                <th>Price:</th>
+                <td class="text-success fw-bold">₹${currentProductData.price.toFixed(2)}</td>
+            </tr>
+        </table>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+}
+
+function confirmClaim() {
+    if (!currentProductData) {
+        alert('No product selected!');
+        return;
+    }
+    
+    console.log('Claiming barcode:', currentProductData.barcode);
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+    modal.hide();
+    
+    // Show loading
+    document.getElementById('loadingSpinner').classList.remove('d-none');
+    document.getElementById('productPreview').classList.add('d-none');
+    
+    // Claim the stock
+    fetch('/vendor/barcode/claim', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ barcode: currentProductData.barcode })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        document.getElementById('loadingSpinner').classList.add('d-none');
+        
+        if (data.success) {
+            showNotification(data.message + ' - Check "View Products" page!', 'success');
+            
+            // Clear input
+            document.getElementById('barcodeInput').value = '';
+            currentProductData = null;
+            
+            // Reload page after 2 seconds to show updated list
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            console.error('Claim failed:', data.message);
+            showNotification(data.message, 'danger');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loadingSpinner').classList.add('d-none');
+        console.error('Error claiming:', error);
+        showNotification('Error adding product. Please try again. Check console for details.', 'danger');
+    });
+}
+
+function showNotification(message, type) {
+    if (typeof window.showNotification === 'function') {
+        window.showNotification(message, type);
+    } else {
+        alert(message);
+    }
+}
+</script>
+
+<style>
+#barcodeInput {
+    font-family: 'Courier New', monospace;
+    font-size: 1.2rem;
+    letter-spacing: 2px;
+}
+
+.barcode-code {
+    background-color: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #d63384;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.barcode-code:hover {
+    background-color: #e9ecef;
+}
+
+.copy-btn {
+    transition: all 0.3s;
+}
+
+.sticky-top {
+    position: sticky;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+    cursor: pointer;
+}
+</style>
+{% endblock %}

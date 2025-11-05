@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-tachometer-alt text-danger"></i> Admin Dashboard
+    </h2>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt"></i> Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin_inventory.create_stock') }}" class="btn btn-success btn-lg me-2 mb-2">
+                        <i class="fas fa-barcode"></i> Generate Barcode & Create Stock
+                    </a>
+                    <a href="{{ url_for('admin_inventory.view_stocks') }}" class="btn btn-primary btn-lg me-2 mb-2">
+                        <i class="fas fa-warehouse"></i> View Inventory Stocks
+                    </a>
+                    <a href="/admin/users" class="btn btn-info btn-lg mb-2">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-users"></i> Total Users
+                    </h5>
+                    <h2 class="mb-0">{{ stats.total_users }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-box"></i> Products
+                    </h5>
+                    <h2 class="mb-0">{{ stats.total_products }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-receipt"></i> Orders
+                    </h5>
+                    <h2 class="mb-0">{{ stats.total_orders }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-rupee-sign"></i> Revenue
+                    </h5>
+                    <h2 class="mb-0">₹{{ stats.total_revenue }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Recent Orders</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Buyer</th>
+                            <th>Seller</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.buyer.name }}</td>
+                            <td>{{ order.seller.name }}</td>
+                            <td>₹{{ order.total_amount }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if order.order_status == 'delivered' else 'warning' }}">
+                                    {{ order.order_status }}
+                                </span>
+                            </td>
+                            <td>{{ order.created_at.strftime('%d %b') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

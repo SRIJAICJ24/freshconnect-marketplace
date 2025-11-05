@@ -1,0 +1,146 @@
+<!-- AI Chatbot Widget -->
+<div class="chatbot-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <!-- Chat Button -->
+    <button id="chatbot-toggle" class="btn btn-primary rounded-circle" style="width: 60px; height: 60px;">
+        <i class="fas fa-robot fa-2x"></i>
+    </button>
+    
+    <!-- Chat Window -->
+    <div id="chatbot-window" class="card shadow-lg" style="display: none; width: 350px; height: 500px; position: fixed; bottom: 90px; right: 20px;">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fas fa-robot"></i> AI Assistant</h6>
+            <button id="chatbot-close" class="btn btn-sm btn-light">×</button>
+        </div>
+        <div class="card-body" id="chatbot-messages" style="overflow-y: auto; height: 380px;">
+            <div class="alert alert-info small">
+                <strong>Hi! 👋</strong> I'm your FreshConnect AI assistant powered by Google Gemini. 
+                நான் தமிழ் மற்றும் English-ல் பதிலளிக்கிறேன்!
+            </div>
+        </div>
+        <div class="card-footer">
+            <div class="input-group">
+                <input type="text" id="chatbot-input" class="form-control" placeholder="Ask me anything...">
+                <button id="chatbot-send" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Chatbot Widget JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('chatbot-toggle');
+    const window = document.getElementById('chatbot-window');
+    const close = document.getElementById('chatbot-close');
+    const input = document.getElementById('chatbot-input');
+    const send = document.getElementById('chatbot-send');
+    const messages = document.getElementById('chatbot-messages');
+    
+    // Toggle chat window
+    toggle.addEventListener('click', () => {
+        window.style.display = window.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    close.addEventListener('click', () => {
+        window.style.display = 'none';
+    });
+    
+    // Send message
+    function sendMessage() {
+        const message = input.value.trim();
+        if (!message) return;
+        
+        // Add user message
+        addMessage(message, 'user');
+        input.value = '';
+        
+        // Show typing indicator
+        const typing = addMessage('Typing...', 'bot');
+        
+        // Call AI API
+        fetch('/api/chatbot', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({message: message})
+        })
+        .then(r => r.json())
+        .then(data => {
+            typing.remove();
+            
+            // Handle different response types from SmartChatbotService
+            if (data.type === 'search_results') {
+                let html = `<strong>${data.message}</strong><br>`;
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(r => {
+                        html += `• ${r.name}: ₹${r.price}/${r.unit} (${r.vendor})<br>`;
+                    });
+                    html += `<a href="${data.redirect}" style="color: #28a745; text-decoration: underline;">→ ${data.action}</a>`;
+                }
+                addMessage(html, 'bot', true);
+            } else if (data.type === 'order_list') {
+                let html = `<strong>${data.message}</strong><br>`;
+                if (data.recent_orders && data.recent_orders.length > 0) {
+                    data.recent_orders.forEach(o => {
+                        html += `• Order #${o.id}: ${o.status} - ₹${o.amount}<br>`;
+                    });
+                    html += `<a href="${data.redirect}" style="color: #28a745; text-decoration: underline;">→ ${data.action}</a>`;
+                }
+                addMessage(html, 'bot', true);
+            } else if (data.type === 'credit_info') {
+                let html = `<strong>${data.message}</strong><br>`;
+                html += `Tier: ${data.tier}<br>`;
+                html += `<a href="${data.redirect}" style="color: #28a745; text-decoration: underline;">→ ${data.action}</a>`;
+                addMessage(html, 'bot', true);
+            } else if (data.type === 'help') {
+                let html = `<strong>${data.message}</strong><br>`;
+                if (data.examples && data.examples.length > 0) {
+                    html += '<br><em>Try:</em><br>';
+                    data.examples.forEach(ex => {
+                        html += `• ${ex}<br>`;
+                    });
+                }
+                addMessage(html, 'bot', true);
+            } else if (data.type === 'text' || data.message) {
+                addMessage(data.message, 'bot');
+            } else if (data.response) {
+                // Fallback for simple chatbot responses
+                addMessage(data.response, 'bot');
+            } else if (data.error) {
+                addMessage('Error: ' + data.error, 'error');
+            } else {
+                addMessage('Sorry, I could not process that request.', 'error');
+            }
+        })
+        .catch(err => {
+            typing.remove();
+            addMessage('Connection error. Please try again.', 'error');
+        });
+    }
+    
+    send.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    function addMessage(text, type, isHTML = false) {
+        const div = document.createElement('div');
+        div.className = 'mb-2 p-2 rounded ' + 
+            (type === 'user' ? 'bg-primary text-white text-end' : 
+             type === 'error' ? 'bg-danger text-white' : 
+             'bg-light');
+        
+        // Use innerHTML for HTML content, textContent for plain text
+        if (isHTML) {
+            div.innerHTML = text;
+        } else {
+            div.textContent = text;
+        }
+        
+        messages.appendChild(div);
+        messages.scrollTop = messages.scrollHeight;
+        return div;
+    }
+});
+</script>

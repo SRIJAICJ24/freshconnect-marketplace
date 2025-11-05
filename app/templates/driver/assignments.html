@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-tasks text-info"></i> My Assignments
+    </h2>
+    
+    {% if assignments %}
+    <div class="row">
+        {% for assignment in assignments %}
+        <div class="col-md-12 mb-3">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">Order #{{ assignment.order_id }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Pickup:</strong><br>
+                                <small>{{ assignment.pickup_location }}</small>
+                            </p>
+                            <p><strong>Delivery:</strong><br>
+                                <small>{{ assignment.delivery_location }}</small>
+                            </p>
+                            <p><strong>Weight:</strong> {{ assignment.weight_assigned_kg }} kg</p>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <p><strong>Status:</strong> 
+                                <span class="badge bg-info">{{ assignment.assignment_status }}</span>
+                            </p>
+                            <p><strong>Assigned:</strong><br>
+                                <small>{{ assignment.assigned_at.strftime('%d %b, %I:%M %p') }}</small>
+                            </p>
+                            
+                            <a href="/driver/delivery/{{ assignment.id }}" class="btn btn-primary mt-2">
+                                <i class="fas fa-arrow-right"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+        <h5>No pending assignments</h5>
+        <p>New assignments will appear here</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

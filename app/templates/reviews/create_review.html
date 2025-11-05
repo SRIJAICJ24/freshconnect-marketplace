@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-star text-warning"></i> 
+            {{ 'Edit Review' if existing_review else 'Write a Review' }}
+        </h2>
+        <a href="{{ url_for('retailer.orders') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Orders
+        </a>
+    </div>
+
+    <!-- Order Info -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-shopping-bag"></i> Order #{{ order.id }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <strong>Vendor:</strong><br>
+                    <i class="fas fa-store"></i> {{ order.seller.business_name or order.seller.name }}
+                </div>
+                <div class="col-md-4">
+                    <strong>Total Amount:</strong><br>
+                    <span class="text-success fs-5">₹{{ order.total_amount }}</span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Delivered On:</strong><br>
+                    {{ order.delivered_at.strftime('%d %b %Y') if order.delivered_at else 'N/A' }}
+                </div>
+            </div>
+            <hr>
+            <strong>Items:</strong>
+            <ul class="list-unstyled mt-2">
+                {% for item in order.items %}
+                <li>
+                    <i class="fas fa-box text-muted"></i>
+                    {{ item.product.product_name }} - {{ item.quantity }} {{ item.product.unit }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Review Form -->
+    <form method="POST" action="{{ url_for('reviews.create_review', order_id=order.id) }}">
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0">
+                    <i class="fas fa-pencil-alt"></i> Your Ratings
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <!-- Rating 1: Product Quality -->
+                <div class="rating-section mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-check-circle text-success"></i> Product Quality
+                    </h6>
+                    <p class="text-muted small">How was the quality of the products you received?</p>
+                    <div class="star-rating-container">
+                        <div class="star-rating" data-rating-name="rating_quality" data-current-rating="{{ existing_review.rating_quality if existing_review else 0 }}">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" name="rating_quality" id="rating_quality" value="{{ existing_review.rating_quality if existing_review else 0 }}" required>
+                        <span class="rating-text ms-3">Not rated yet</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Rating 2: Delivery Time -->
+                <div class="rating-section mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-truck text-info"></i> Delivery Time
+                    </h6>
+                    <p class="text-muted small">Was the order delivered on time?</p>
+                    <div class="star-rating-container">
+                        <div class="star-rating" data-rating-name="rating_delay" data-current-rating="{{ existing_review.rating_delay if existing_review else 0 }}">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" name="rating_delay" id="rating_delay" value="{{ existing_review.rating_delay if existing_review else 0 }}" required>
+                        <span class="rating-text ms-3">Not rated yet</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Rating 3: Communication -->
+                <div class="rating-section mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-comments text-primary"></i> Communication
+                    </h6>
+                    <p class="text-muted small">How was the vendor's communication and service?</p>
+                    <div class="star-rating-container">
+                        <div class="star-rating" data-rating-name="rating_communication" data-current-rating="{{ existing_review.rating_communication if existing_review else 0 }}">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                        <input type="hidden" name="rating_communication" id="rating_communication" value="{{ existing_review.rating_communication if existing_review else 0 }}" required>
+                        <span class="rating-text ms-3">Not rated yet</span>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Comment -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-comment-dots text-secondary"></i> Additional Comments (Optional)
+                    </h6>
+                    <textarea name="comment" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="Share more details about your experience...">{{ existing_review.comment if existing_review else '' }}</textarea>
+                    <small class="text-muted">Help others by sharing your experience!</small>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> 
+                        {{ 'Update Review' if existing_review else 'Submit Review' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- Review Guidelines -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+            <h6 class="mb-0">
+                <i class="fas fa-info-circle"></i> Review Guidelines
+            </h6>
+        </div>
+        <div class="card-body">
+            <ul class="mb-0">
+                <li>Be honest and fair in your ratings</li>
+                <li>Focus on product quality, delivery, and service</li>
+                <li>Avoid personal attacks or inappropriate language</li>
+                <li>Your review helps other buyers make informed decisions</li>
+                <li>You can edit your review later if needed</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.star-rating-container {
+    display: flex;
+    align-items: center;
+}
+
+.star-rating {
+    display: inline-flex;
+    font-size: 2rem;
+    cursor: pointer;
+}
+
+.star-rating i {
+    color: #ddd;
+    transition: color 0.2s, transform 0.2s;
+    margin: 0 3px;
+}
+
+.star-rating i:hover {
+    transform: scale(1.2);
+}
+
+.star-rating i.fas {
+    color: #ffc107;
+}
+
+.star-rating i.far:hover,
+.star-rating i.far.hover {
+    color: #ffc107;
+}
+
+.rating-text {
+    font-size: 1rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.rating-section {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+</style>
+
+<script>
+// Star rating functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const ratingContainers = document.querySelectorAll('.star-rating');
+    
+    ratingContainers.forEach(container => {
+        const stars = container.querySelectorAll('i');
+        const ratingName = container.dataset.ratingName;
+        const input = document.getElementById(ratingName);
+        const currentRating = parseInt(container.dataset.currentRating) || 0;
+        const ratingText = container.parentElement.querySelector('.rating-text');
+        
+        // Set initial rating
+        if (currentRating > 0) {
+            setRating(currentRating);
+        }
+        
+        // Hover effect
+        stars.forEach(star => {
+            star.addEventListener('mouseenter', function() {
+                const rating = parseInt(this.dataset.rating);
+                highlightStars(rating);
+            });
+            
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                setRating(rating);
+                input.value = rating;
+                updateRatingText(rating);
+                checkFormValidity();
+            });
+        });
+        
+        container.addEventListener('mouseleave', function() {
+            const currentValue = parseInt(input.value) || 0;
+            highlightStars(currentValue);
+        });
+        
+        function highlightStars(rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far');
+                    star.classList.add('fas', 'hover');
+                } else {
+                    star.classList.remove('fas', 'hover');
+                    star.classList.add('far');
+                }
+            });
+        }
+        
+        function setRating(rating) {
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.remove('far', 'hover');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas', 'hover');
+                    star.classList.add('far');
+                }
+            });
+        }
+        
+        function updateRatingText(rating) {
+            const labels = {
+                1: 'Poor',
+                2: 'Fair',
+                3: 'Good',
+                4: 'Very Good',
+                5: 'Excellent'
+            };
+            ratingText.textContent = labels[rating] || 'Not rated yet';
+            ratingText.style.color = rating >= 4 ? '#28a745' : rating >= 3 ? '#ffc107' : '#dc3545';
+        }
+        
+        // Initialize text if there's a current rating
+        if (currentRating > 0) {
+            updateRatingText(currentRating);
+        }
+    });
+    
+    // Check if all ratings are filled
+    function checkFormValidity() {
+        const quality = document.getElementById('rating_quality').value;
+        const delay = document.getElementById('rating_delay').value;
+        const communication = document.getElementById('rating_communication').value;
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (quality > 0 && delay > 0 && communication > 0) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // Initial check
+    checkFormValidity();
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="hero bg-gradient py-5 text-center" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <div class="container">
+        <h1 class="display-3 fw-bold mb-3">🌱 FreshConnect</h1>
+        <p class="lead fs-4">Direct Wholesale-to-Retail Marketplace</p>
+        <p class="fs-5">Connecting Farmers, Vendors, Retailers & Drivers</p>
+        
+        {% if not current_user.is_authenticated %}
+        <div class="mt-4">
+            <a href="/auth/login" class="btn btn-light btn-lg me-2">Login</a>
+            <a href="/auth/register" class="btn btn-success btn-lg">Get Started</a>
+        </div>
+        {% else %}
+        <div class="mt-4">
+            <a href="/dashboard" class="btn btn-light btn-lg">Go to Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-5">How It Works</h2>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card h-100 text-center shadow-sm border-0">
+                <div class="card-body">
+                    <i class="fas fa-store fa-4x text-success mb-3"></i>
+                    <h5 class="card-title">For Vendors</h5>
+                    <p class="card-text">Sell directly to retailers with no middlemen. List products and manage inventory.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100 text-center shadow-sm border-0">
+                <div class="card-body">
+                    <i class="fas fa-shopping-bag fa-4x text-info mb-3"></i>
+                    <h5 class="card-title">For Retailers</h5>
+                    <p class="card-text">Shop from multiple vendors, build credit score, get discounts.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100 text-center shadow-sm border-0">
+                <div class="card-body">
+                    <i class="fas fa-truck fa-4x text-warning mb-3"></i>
+                    <h5 class="card-title">For Drivers</h5>
+                    <p class="card-text">Earn by delivering orders. Track assignments and manage deliveries.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card h-100 text-center shadow-sm border-0">
+                <div class="card-body">
+                    <i class="fas fa-robot fa-4x text-primary mb-3"></i>
+                    <h5 class="card-title">AI Assistant</h5>
+                    <p class="card-text">Get help with orders, products, and marketplace queries using Gemini AI.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    <div class="card bg-light border-0">
+        <div class="card-body text-center py-5">
+            <h3 class="mb-3">Key Features</h3>
+            <div class="row mt-4">
+                <div class="col-md-4 mb-3">
+                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                    <p class="mb-0"><strong>MOQ Management</strong></p>
+                    <small class="text-muted">Minimum Order Quantities</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <i class="fas fa-medal text-warning fa-2x mb-2"></i>
+                    <p class="mb-0"><strong>Credit System</strong></p>
+                    <small class="text-muted">Build tier & get benefits</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <i class="fas fa-map-marked-alt text-info fa-2x mb-2"></i>
+                    <p class="mb-0"><strong>Live Tracking</strong></p>
+                    <small class="text-muted">Track your deliveries</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5 mb-5">
+    <div class="alert alert-info border-0 shadow-sm">
+        <div class="d-flex align-items-center">
+            <i class="fas fa-info-circle fa-2x me-3"></i>
+            <div>
+                <h5 class="mb-1">College Project Demo</h5>
+                <p class="mb-0">This is a demonstration project. Only Gemini API is real. All payments, SMS, and GPS features are mocked for educational purposes.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

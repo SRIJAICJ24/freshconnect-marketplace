@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-box text-primary"></i> My Products</h2>
+        <a href="/vendor/add-product" class="btn btn-success">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+    
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm">
+                {% if product.image_filename %}
+                <img src="{{ url_for('static', filename='images/products/' + product.image_filename) }}" 
+                     class="card-img-top product-image" alt="{{ product.product_name }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-image fa-4x text-muted"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.product_name }}</h5>
+                    <p class="card-text text-muted mb-2">
+                        <span class="badge bg-info">{{ product.category }}</span>
+                        {% if product.moq_enabled %}
+                        <span class="badge bg-warning">MOQ</span>
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong class="text-success fs-5">₹{{ product.price }}/{{ product.unit }}</strong>
+                        <span class="text-muted">Stock: {{ product.quantity }}</span>
+                    </div>
+                    
+                    {% if product.moq_enabled %}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> Min: {{ product.minimum_quantity }} {{ product.unit }}
+                    </small>
+                    {% endif %}
+                    
+                    {% if product.expiry_date %}
+                    <p class="text-danger small mb-0 mt-2">
+                        <i class="fas fa-calendar"></i> Expires: {{ product.expiry_date.strftime('%d %b %Y') }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-white">
+                    <span class="badge bg-{{ 'success' if product.is_active else 'secondary' }}">
+                        {{ 'Active' if product.is_active else 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-box-open fa-3x mb-3"></i>
+        <h5>No products yet</h5>
+        <p>Start by adding your first product</p>
+        <a href="/vendor/add-product" class="btn btn-success">Add Product</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

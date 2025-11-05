@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-shopping-bag text-success"></i> Browse Products
+    </h2>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" class="form-control" name="search" placeholder="Search products..." 
+                           value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="col-md-5">
+                    <select class="form-select" name="category">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {{ 'selected' if request.args.get('category') == cat else '' }}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if products %}
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm product-card">
+                {% if product.image_filename %}
+                <img src="{{ url_for('static', filename='images/products/' + product.image_filename) }}" 
+                     class="card-img-top product-image" alt="{{ product.product_name }}">
+                {% else %}
+                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <i class="fas fa-leaf fa-4x text-success"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.product_name }}</h5>
+                    <p class="card-text">
+                        <span class="badge bg-info">{{ product.category }}</span>
+                        {% if product.moq_enabled %}
+                        <span class="badge bg-warning text-dark">MOQ</span>
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-success fs-4 fw-bold">₹{{ product.price }}</span>
+                        <span class="text-muted">per {{ product.unit }}</span>
+                    </div>
+                    
+                    <p class="text-muted small mb-2">
+                        <i class="fas fa-store"></i> {{ product.vendor.business_name or product.vendor.name }}
+                    </p>
+                    
+                    {% if product.moq_enabled %}
+                    <div class="alert alert-warning py-2 small">
+                        <i class="fas fa-info-circle"></i> Min: {{ product.minimum_quantity }} {{ product.unit }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="input-group mb-2">
+                        <input type="number" class="form-control" id="qty-{{ product.id }}" 
+                               value="{{ product.minimum_quantity if product.moq_enabled else 1 }}" 
+                               min="{{ product.minimum_quantity if product.moq_enabled else 1 }}">
+                        <span class="input-group-text">{{ product.unit }}</span>
+                    </div>
+                    
+                    <button class="btn btn-success w-100" onclick="addProductToCart({{ product.id }})">
+                        <i class="fas fa-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-box-open fa-3x mb-3"></i>
+        <h5>No products found</h5>
+        <p>Try searching with different keywords</p>
+    </div>
+    {% endif %}
+</div>
+
+{% raw %}
+<script>
+function addProductToCart(productId) {
+    const qtyInput = document.getElementById('qty-' + productId);
+    const quantity = parseInt(qtyInput.value);
+    
+    console.log('Adding to cart:', productId, 'Quantity:', quantity);
+    
+    if (!quantity || quantity <= 0) {
+        if (typeof showNotification === 'function') {
+            showNotification('Please enter a valid quantity', 'danger');
+        } else {
+            alert('Please enter a valid quantity');
+        }
+        return;
+    }
+    
+    fetch('/retailer/add-to-cart', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Use toast notification if available, otherwise alert
+            if (typeof showNotification === 'function') {
+                showNotification('✓ ' + data.message, 'success');
+            } else {
+                alert(data.message);
+            }
+            
+            // Update cart count if function exists
+            if (typeof updateCartCount === 'function') {
+                updateCartCount();
+            }
+            
+            // Reset quantity to minimum
+            const minQty = qtyInput.getAttribute('min');
+            if (minQty) {
+                qtyInput.value = minQty;
+            }
+        } else {
+            if (typeof showNotification === 'function') {
+                showNotification(data.message, 'danger');
+            } else {
+                alert(data.message);
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        if (typeof showNotification === 'function') {
+            showNotification('Error adding to cart', 'danger');
+        } else {
+            alert('Error adding to cart');
+        }
+    });
+}
+</script>
+{% endraw %}
+{% endblock %}

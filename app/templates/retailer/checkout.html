@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-check-circle text-success"></i> Checkout
+    </h2>
+    
+    <div class="card shadow">
+        <div class="card-body p-4">
+            <form method="POST">
+                <h5 class="mb-3">Delivery Information</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label">Delivery Address *</label>
+                    <textarea class="form-control" name="delivery_address" rows="3" required 
+                              placeholder="Enter complete delivery address">{{ current_user.address or '' }}</textarea>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Your order will be created and you'll be redirected to payment
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-arrow-right"></i> Proceed to Payment
+                    </button>
+                    <a href="/retailer/cart" class="btn btn-secondary">Back to Cart</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

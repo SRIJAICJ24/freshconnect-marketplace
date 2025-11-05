@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-truck text-warning"></i> Driver Dashboard
+    </h2>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tasks"></i> Pending
+                    </h5>
+                    <h2 class="mb-0">{{ pending }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-truck-loading"></i> Active
+                    </h5>
+                    <h2 class="mb-0">{{ active }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-check-circle"></i> Completed
+                    </h5>
+                    <h2 class="mb-0">{{ driver.total_deliveries }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Vehicle Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Type:</strong> {{ driver.vehicle_type }}</p>
+                    <p><strong>Registration:</strong> {{ driver.vehicle_registration }}</p>
+                    <p><strong>Capacity:</strong> {{ driver.vehicle_capacity_kg }} kg</p>
+                    <p><strong>Current Load:</strong> {{ driver.current_load_kg }} kg</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-{{ 'success' if driver.status == 'available' else 'warning' }}">
+                            {{ driver.status }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Earnings (Mock)</h5>
+                </div>
+                <div class="card-body">
+                    <h3 class="text-success">₹{{ driver.total_deliveries * 150 }}</h3>
+                    <p class="text-muted">Total earnings from deliveries</p>
+                    
+                    <div class="alert alert-info small">
+                        <i class="fas fa-info-circle"></i> Earnings are calculated based on mock formula
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <a href="/driver/assignments" class="btn btn-primary w-100">
+                        <i class="fas fa-list"></i> View Assignments
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('driver.routes') }}" class="btn btn-success w-100">
+                        <i class="fas fa-route"></i> 🆕 My Routes
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('driver.deliveries') }}" class="btn btn-info w-100">
+                        <i class="fas fa-truck-loading"></i> 🆕 My Deliveries
+                    </a>
+                </div>
+            </div>
+            
+            <div class="alert alert-success mt-3 mb-0">
+                <h6><i class="fas fa-star"></i> New Location-Based Features!</h6>
+                <ul class="mb-0 small">
+                    <li><strong>My Routes:</strong> View your planned routes with GPS coordinates</li>
+                    <li><strong>My Deliveries:</strong> See all deliveries with location details, distance, weight, and logistics pricing</li>
+                    <li>Each delivery shows 4-step tracking and route optimization</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

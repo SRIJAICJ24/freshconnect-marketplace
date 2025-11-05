@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        <i class="fas fa-map-marker-alt text-info"></i> Track Order #{{ order.id }}
+    </h2>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Delivery Status</h5>
+                </div>
+                <div class="card-body">
+                    {% if assignment %}
+                    <div class="mb-3">
+                        <p><strong>Driver:</strong> {{ assignment.driver.user.name }}</p>
+                        <p><strong>Vehicle:</strong> {{ assignment.driver.vehicle_type }} ({{ assignment.driver.vehicle_registration }})</p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge bg-info">{{ assignment.assignment_status }}</span>
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>MOCK GPS:</strong> Live tracking is simulated for demo purposes
+                    </div>
+                    
+                    <div id="mockMap" class="bg-light p-4 rounded text-center">
+                        <i class="fas fa-map fa-5x text-muted mb-3"></i>
+                        <p class="text-muted">Mock GPS Coordinates</p>
+                        <p id="coordinates" class="fw-bold">Loading...</p>
+                        <p id="eta" class="text-info">Estimated time: Calculating...</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-clock"></i> Driver not yet assigned
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                    <p><strong>Amount:</strong> ₹{{ order.total_amount }}</p>
+                    <p><strong>Payment:</strong> 
+                        <span class="badge bg-success">{{ order.payment_status }}</span>
+                    </p>
+                    <p><strong>Delivery:</strong><br>
+                        <small>{{ order.delivery_address }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if assignment %}
+{% raw %}
+<script>
+function updateLocation() {
+    fetch('/api/driver-location/{{ assignment.id }}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.lat && data.lng) {
+                document.getElementById('coordinates').textContent = 
+                    'Lat: ' + data.lat + ', Lng: ' + data.lng;
+                document.getElementById('eta').textContent = 
+                    'ETA: ' + data.eta_minutes + ' minutes';
+            }
+        });
+}
+
+updateLocation();
+setInterval(updateLocation, 10000);
+</script>
+{% endraw %}
+{% endif %}
+{% endblock %}

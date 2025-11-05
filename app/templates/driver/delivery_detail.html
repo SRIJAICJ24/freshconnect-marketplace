@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}Delivery Details - Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-box-open text-primary"></i> Delivery Details - Order #{{ order.id }}
+        </h2>
+        <a href="{{ url_for('driver.deliveries') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    
+    <div class="row">
+        <!-- Left Column: Location & Route Info -->
+        <div class="col-md-8">
+            <!-- Location Information -->
+            {% if location %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-map-marked-alt"></i> Location & Route Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-store text-success"></i> Pickup Location:</h6>
+                            <p class="mb-0"><strong>{{ order.seller.business_name }}</strong></p>
+                            <small class="text-muted">Vendor Location</small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-map-marker-alt text-danger"></i> Delivery Location:</h6>
+                            <p class="mb-0"><strong>{{ location.retailer_location }}</strong></p>
+                            <small class="text-muted">
+                                Lat: {{ location.retailer_lat }}, Lng: {{ location.retailer_lng }}
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <i class="fas fa-road fa-2x text-info mb-2"></i>
+                            <h4>{{ location.distance_from_vendor_km }} km</h4>
+                            <small class="text-muted">Total Distance</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-route fa-2x text-warning mb-2"></i>
+                            <h4>{{ location.detour_distance_km }} km</h4>
+                            <small class="text-muted">Detour Distance</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-weight fa-2x text-success mb-2"></i>
+                            <h4>{{ location.total_weight_kg }} kg</h4>
+                            <small class="text-muted">Total Weight</small>
+                        </div>
+                        <div class="col-md-3">
+                            <i class="fas fa-cube fa-2x text-primary mb-2"></i>
+                            <h4>{{ location.volume_m3 }} m³</h4>
+                            <small class="text-muted">Volume</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Delivery Steps (4-Step Tracking) -->
+            {% if steps %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-tasks"></i> Delivery Progress (4 Steps)</h5>
+                </div>
+                <div class="card-body">
+                    {% for step in steps %}
+                    <div class="row mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="col-2 text-center">
+                            <div class="rounded-circle d-inline-flex align-items-center justify-content-center 
+                                        {% if step.status == 'completed' %}bg-success text-white{% else %}bg-light text-muted{% endif %}"
+                                 style="width: 50px; height: 50px;">
+                                <strong>{{ step.step_number }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-10">
+                            <h6>
+                                {{ step.step_name }}
+                                {% if step.status == 'completed' %}
+                                    <span class="badge bg-success ms-2">✓ Completed</span>
+                                {% elif step.status == 'in_progress' %}
+                                    <span class="badge bg-warning ms-2">⏳ In Progress</span>
+                                {% else %}
+                                    <span class="badge bg-secondary ms-2">⏸ Pending</span>
+                                {% endif %}
+                            </h6>
+                            
+                            {% if step.details %}
+                            <div class="mt-2">
+                                {% for key, value in step.details.items() %}
+                                    <small class="text-muted">
+                                        <strong>{{ key|replace('_', ' ')|title }}:</strong> {{ value }}
+                                    </small><br>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            
+                            {% if step.completed_at %}
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> {{ step.completed_at.strftime('%d-%m-%Y %H:%M') }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Order Items -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-box"></i> Order Items</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order.items %}
+                                <tr>
+                                    <td>{{ item.product.product_name }}</td>
+                                    <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td>₹{{ item.price_per_unit }}</td>
+                                    <td>₹{{ item.total_price }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Pricing & Actions -->
+        <div class="col-md-4">
+            <!-- Pricing Breakdown -->
+            {% if location %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-rupee-sign"></i> Pricing Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-8">Product Cost:</div>
+                        <div class="col-4 text-end">₹{{ "%.2f"|format(location.product_cost) }}</div>
+                    </div>
+                    
+                    <hr class="my-2">
+                    
+                    <div class="row mb-2">
+                        <div class="col-8 text-muted small">Volume Charge:</div>
+                        <div class="col-4 text-end text-muted small">₹{{ "%.2f"|format(location.volume_charge) }}</div>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-8 text-muted small">Driver Rate:</div>
+                        <div class="col-4 text-end text-muted small">₹{{ "%.2f"|format(location.driver_rate) }}</div>
+                    </div>
+                    
+                    <div class="row mb-2">
+                        <div class="col-8 text-muted small">Detour Charge:</div>
+                        <div class="col-4 text-end text-muted small">₹{{ "%.2f"|format(location.detour_charge) }}</div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-8"><strong>Logistics Total:</strong></div>
+                        <div class="col-4 text-end"><strong>₹{{ "%.2f"|format(location.total_logistics_cost) }}</strong></div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-8"><h5>TOTAL:</h5></div>
+                        <div class="col-4 text-end"><h5 class="text-success">₹{{ "%.2f"|format(location.final_amount) }}</h5></div>
+                    </div>
+                    
+                    <div class="alert alert-success mt-3 mb-0">
+                        <strong>Your Earnings:</strong><br>
+                        <h4>₹{{ "%.2f"|format(location.driver_rate) }}</h4>
+                        <small>(Driver rate from this delivery)</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Order Info -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Order Info</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Order ID:</strong> #{{ order.id }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge bg-{{ 'success' if order.order_status == 'delivered' else 'warning' }}">
+                            {{ order.order_status }}
+                        </span>
+                    </p>
+                    <p><strong>Buyer:</strong> {{ order.buyer.name }}</p>
+                    <p><strong>Seller:</strong> {{ order.seller.business_name }}</p>
+                    <p><strong>Created:</strong> {{ order.created_at.strftime('%d-%m-%Y %H:%M') }}</p>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-cog"></i> Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if order.order_status == 'confirmed' %}
+                        <button class="btn btn-success btn-lg w-100 mb-2">
+                            <i class="fas fa-check"></i> Mark as Picked Up
+                        </button>
+                    {% elif order.order_status == 'in_transit' %}
+                        <button class="btn btn-primary btn-lg w-100 mb-2">
+                            <i class="fas fa-truck"></i> Mark as Delivered
+                        </button>
+                    {% elif order.order_status == 'delivered' %}
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle"></i> Delivery Complete!
+                        </div>
+                    {% endif %}
+                    
+                    <button class="btn btn-outline-secondary w-100">
+                        <i class="fas fa-phone"></i> Contact Buyer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

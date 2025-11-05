@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Responsive Design Demo - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Screen Size Indicator -->
+    <div class="card mb-3" style="position: sticky; top: 8px; z-index: 100;">
+        <div class="card-body text-center">
+            <h4 id="screen-indicator">📱 Mobile View</h4>
+            <p class="mb-2"><strong>Current Width:</strong> <span id="width-display">320px</span></p>
+            <p class="mb-0 text-muted" id="layout-info">Bottom Navigation Active</p>
+        </div>
+    </div>
+
+    <!-- Demo Content -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">🎨 Responsive Layout Demo</h5>
+        </div>
+        <div class="card-body">
+            <h6>How it Works:</h6>
+            <ul>
+                <li><strong>Mobile (< 768px):</strong> Bottom navigation, 1-column layout</li>
+                <li><strong>Tablet (768px - 1023px):</strong> Top navigation, 2-column layout</li>
+                <li><strong>Desktop (1024px+):</strong> Top navigation, 3+ column layout</li>
+            </ul>
+
+            <div class="alert alert-info">
+                <strong>💡 Try This:</strong>
+                <ol class="mb-0">
+                    <li>Open Chrome DevTools (F12)</li>
+                    <li>Toggle Device Toolbar (Ctrl+Shift+M)</li>
+                    <li>Resize width from 320px → 1920px</li>
+                    <li>Watch navigation switch positions!</li>
+                </ol>
+            </div>
+
+            <!-- Breakpoint Indicators -->
+            <div class="row mt-4">
+                <div class="col-12 col-md-4">
+                    <div class="card text-center" style="border-left: 4px solid #dc3545;">
+                        <div class="card-body">
+                            <i class="fas fa-mobile-alt fa-3x text-danger mb-2"></i>
+                            <h6>📱 Mobile</h6>
+                            <p class="text-muted mb-0">320px - 767px</p>
+                            <small>Bottom Nav</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card text-center" style="border-left: 4px solid #ffc107;">
+                        <div class="card-body">
+                            <i class="fas fa-tablet-alt fa-3x text-warning mb-2"></i>
+                            <h6>📱 Tablet</h6>
+                            <p class="text-muted mb-0">768px - 1023px</p>
+                            <small>Top Nav</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card text-center" style="border-left: 4px solid #28a745;">
+                        <div class="card-body">
+                            <i class="fas fa-desktop fa-3x text-success mb-2"></i>
+                            <h6>🖥️ Desktop</h6>
+                            <p class="text-muted mb-0">1024px+</p>
+                            <small>Top Nav</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Demo -->
+            <h6 class="mt-4">Grid System Example:</h6>
+            <div class="row">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card mb-3" style="background: #e8f5e9;">
+                        <div class="card-body text-center">
+                            <p class="mb-0"><strong>Column 1</strong></p>
+                            <small class="text-muted">Full width on mobile</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card mb-3" style="background: #fff3e0;">
+                        <div class="card-body text-center">
+                            <p class="mb-0"><strong>Column 2</strong></p>
+                            <small class="text-muted">50% width on tablet</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card mb-3" style="background: #e3f2fd;">
+                        <div class="card-body text-center">
+                            <p class="mb-0"><strong>Column 3</strong></p>
+                            <small class="text-muted">33% width on desktop</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Demo -->
+            <h6 class="mt-4">Navigation Behavior:</h6>
+            <div class="alert alert-success">
+                <strong>✅ Current Navigation:</strong>
+                <p class="mb-0" id="nav-status">Loading...</p>
+            </div>
+
+            <!-- Testing Instructions -->
+            <div class="card mt-4" style="background: #f8f9fa;">
+                <div class="card-body">
+                    <h6>🧪 Quick Test:</h6>
+                    <ol>
+                        <li><strong>Mobile Test:</strong> Resize browser to 375px (iPhone width)</li>
+                        <li><strong>Tablet Test:</strong> Resize to 768px (iPad width)</li>
+                        <li><strong>Desktop Test:</strong> Resize to 1280px or fullscreen</li>
+                    </ol>
+                    <p class="mb-0 text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        The navigation will automatically switch from bottom to top at 768px!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 767px) {
+    #screen-indicator { color: #dc3545; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    #screen-indicator { color: #ffc107; }
+}
+
+@media (min-width: 1024px) {
+    #screen-indicator { color: #28a745; }
+}
+</style>
+
+<script>
+function updateScreenInfo() {
+    const width = window.innerWidth;
+    const widthDisplay = document.getElementById('width-display');
+    const indicator = document.getElementById('screen-indicator');
+    const layoutInfo = document.getElementById('layout-info');
+    const navStatus = document.getElementById('nav-status');
+    
+    widthDisplay.textContent = width + 'px';
+    
+    if (width < 768) {
+        // Mobile
+        indicator.innerHTML = '📱 Mobile View';
+        indicator.style.color = '#dc3545';
+        layoutInfo.textContent = 'Bottom Navigation Active • 1 Column Grid';
+        navStatus.innerHTML = '<i class="fas fa-mobile-alt"></i> <strong>Bottom Navigation</strong> - Fixed at bottom of screen with icon tabs';
+    } else if (width < 1024) {
+        // Tablet
+        indicator.innerHTML = '📱 Tablet View';
+        indicator.style.color = '#ffc107';
+        layoutInfo.textContent = 'Top Navigation Active • 2 Column Grid';
+        navStatus.innerHTML = '<i class="fas fa-tablet-alt"></i> <strong>Top Navigation</strong> - Horizontal navbar at top with logo visible';
+    } else {
+        // Desktop
+        indicator.innerHTML = '🖥️ Desktop View';
+        indicator.style.color = '#28a745';
+        layoutInfo.textContent = 'Top Navigation Active • 3+ Column Grid';
+        navStatus.innerHTML = '<i class="fas fa-desktop"></i> <strong>Top Navigation</strong> - Full horizontal navbar with all options';
+    }
+}
+
+// Update on load
+updateScreenInfo();
+
+// Update on resize
+window.addEventListener('resize', updateScreenInfo);
+
+// Update every 100ms (for smooth updates during resize)
+setInterval(updateScreenInfo, 100);
+
+// Log device info
+console.log('=== Responsive Demo Loaded ===');
+console.log('Initial width:', window.innerWidth);
+console.log('Device pixel ratio:', window.devicePixelRatio);
+console.log('Touch support:', 'ontouchstart' in window);
+</script>
+{% endblock %}

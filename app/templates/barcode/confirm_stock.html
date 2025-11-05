@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Stock - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-barcode fa-4x mb-4 text-success"></i>
+                    
+                    <h3 class="mb-3">Barcode Scanned Successfully!</h3>
+                    <p class="text-muted mb-4"><code>{{ barcode.barcode_number }}</code></p>
+                    
+                    <!-- Product Details -->
+                    <div class="alert alert-info mb-4">
+                        <h5><i class="fas fa-box"></i> {{ product.product_name }}</h5>
+                        <p class="mb-2"><strong>Quantity:</strong> {{ barcode.quantity }} {{ barcode.unit }}</p>
+                        <p class="mb-0"><strong>Price:</strong> ₹{{ product.price }}/{{ product.unit }}</p>
+                    </div>
+                    
+                    <!-- Tamil + English Question -->
+                    <div class="mb-4">
+                        <h5>தயவுசெய்து உறுதிபடுத்தவும்</h5>
+                        <h6>Would you like to add this to your stock?</h6>
+                        <p class="text-muted small">இந்த பொருளை உங்கள் கையிருப்பில் சேர்க்க விரும்புகிறீர்களா?</p>
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <button class="btn btn-success btn-lg w-100" onclick="confirmStock({{ barcode.id }})">
+                                <i class="fas fa-check-circle"></i><br>
+                                <strong>Yes / ஆம்</strong>
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-danger btn-lg w-100" onclick="rejectStock({{ barcode.id }})">
+                                <i class="fas fa-times-circle"></i><br>
+                                <strong>No / இல்லை</strong>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-start">
+                        <h6>Current Stock:</h6>
+                        <p class="mb-0">{{ product.product_name }}: <strong>{{ product.quantity }} {{ product.unit }}</strong></p>
+                        <p class="text-success">After adding: <strong>{{ product.quantity + barcode.quantity }} {{ product.unit }}</strong></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmStock(barcodeId) {
+    if (!confirm('Are you sure you want to add this to stock?')) {
+        return;
+    }
+    
+    fetch(`/barcode/confirm/${barcodeId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`✅ Success!\n\n${data.quantity} ${data.product_name} added to stock!\n\nOld: ${data.old_total}\nNew: ${data.new_total}`);
+            window.location.href = '/barcode/scan';
+        } else {
+            alert('❌ Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function rejectStock(barcodeId) {
+    if (!confirm('Are you sure you want to reject this delivery?')) {
+        return;
+    }
+    
+    fetch(`/barcode/reject/${barcodeId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.href = '/barcode/scan';
+        } else {
+            alert('Error: ' + data.message);
+        }
+    });
+}
+</script>
+{% endblock %}

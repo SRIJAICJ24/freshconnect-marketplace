@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency Marketplace Analytics - FreshConnect{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2><i class="fas fa-chart-bar"></i> Emergency Marketplace Analytics</h2>
+    <p class="text-muted">Track waste reduction impact and financial metrics</p>
+    
+    <!-- Key Metrics (30 days) -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body text-center">
+                    <h6>Waste Prevented (30 days)</h6>
+                    <h2>{{ "%.0f"|format(metrics.waste_prevented_kg) }} kg</h2>
+                    <small>Food saved from landfill</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body text-center">
+                    <h6>Retailer Savings</h6>
+                    <h2>₹{{ "{:,.0f}".format(metrics.retailer_savings) }}</h2>
+                    <small>Total discounts given</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body text-center">
+                    <h6>Vendor Recovery</h6>
+                    <h2>₹{{ "{:,.0f}".format(metrics.vendor_recovery) }}</h2>
+                    <small>Money recovered by vendors</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body text-center">
+                    <h6>Active Emergency Sales</h6>
+                    <h2>{{ emergency_count }}</h2>
+                    <small>Currently listed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Participation Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-store fa-3x text-primary mb-2"></i>
+                    <h3>{{ metrics.vendors_count }}</h3>
+                    <p class="text-muted mb-0">Vendors Participating</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-success mb-2"></i>
+                    <h3>{{ metrics.retailers_count }}</h3>
+                    <p class="text-muted mb-0">Retailers Buying</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-shopping-bag fa-3x text-warning mb-2"></i>
+                    <h3>{{ metrics.items_sold }}</h3>
+                    <p class="text-muted mb-0">Items Sold</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Auto-Flag Controls -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Auto-Flag System</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <strong>Last Run:</strong> {{ auto_flag_result.message }}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button class="btn btn-primary w-100" onclick="autoFlag()">
+                                <i class="fas fa-sync"></i> Run Auto-Flag Now
+                            </button>
+                            <small class="text-muted">Automatically flag products expiring within 3 days</small>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-info w-100" onclick="updateMetrics()">
+                                <i class="fas fa-refresh"></i> Update Metrics
+                            </button>
+                            <small class="text-muted">Recalculate all metrics for today</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Trend Chart -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> 30-Day Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="trendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Impact Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-leaf"></i> Environmental & Social Impact</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-recycle fa-3x text-success mb-2"></i>
+                                <h4>{{ "%.0f"|format(metrics.waste_prevented_kg) }} kg</h4>
+                                <p class="text-muted">Waste Prevented</p>
+                                <small>Equivalent to {{ "%.1f"|format(metrics.waste_prevented_kg / 70) }} days of Koyambedu daily waste (70 tonnes/day)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-rupee-sign fa-3x text-info mb-2"></i>
+                                <h4>₹{{ "{:,.0f}".format(metrics.retailer_savings) }}</h4>
+                                <p class="text-muted">Money Saved by Retailers</p>
+                                <small>Average discount: {{ "%.1f"|format((metrics.retailer_savings / metrics.vendor_recovery) * 100) if metrics.vendor_recovery and metrics.vendor_recovery > 0 else 0 }}%</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center p-3">
+                                <i class="fas fa-hand-holding-usd fa-3x text-warning mb-2"></i>
+                                <h4>₹{{ "{:,.0f}".format(metrics.vendor_recovery) }}</h4>
+                                <p class="text-muted">Vendor Recovery</p>
+                                <small>Money that would have been lost</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Trend data from backend
+const trendData = {{ metrics.trend | tojson | safe }};
+
+// Create chart
+const ctx = document.getElementById('trendChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: trendData.map(d => d.date),
+        datasets: [
+            {
+                label: 'Products in Emergency',
+                data: trendData.map(d => d.products),
+                borderColor: '#dc3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                fill: true
+            },
+            {
+                label: 'Items Sold',
+                data: trendData.map(d => d.sold),
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                fill: true
+            },
+            {
+                label: 'Waste Prevented (kg)',
+                data: trendData.map(d => d.waste_prevented_kg),
+                borderColor: '#ffc107',
+                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+
+// Auto-flag function
+function autoFlag() {
+    if (!confirm('Run auto-flag to mark expiring products?')) return;
+    
+    fetch('/emergency/api/auto-flag', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.message);
+            location.reload();
+        })
+        .catch(e => alert('Error running auto-flag'));
+}
+
+// Update metrics function
+function updateMetrics() {
+    if (!confirm('Recalculate all metrics?')) return;
+    
+    fetch('/emergency/api/update-metrics', { method: 'POST' })
+        .then(r => r.json())
+        .then(d => {
+            alert(d.message);
+            location.reload();
+        })
+        .catch(e => alert('Error updating metrics'));
+}
+</script>
+{% endblock %}

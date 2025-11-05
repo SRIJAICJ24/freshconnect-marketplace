@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-star text-warning"></i> Reviews for {{ vendor.business_name or vendor.name }}
+        </h2>
+        <a href="{{ url_for('retailer.browse') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Browse
+        </a>
+    </div>
+
+    <!-- Rating Summary -->
+    <div class="card mb-4 shadow-lg border-0">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center border-end">
+                    <div class="display-1 fw-bold text-warning">
+                        {{ "%.1f"|format(vendor.average_rating) if vendor.average_rating else '0.0' }}
+                    </div>
+                    <div class="mb-2">
+                        {% set rating = vendor.average_rating|int if vendor.average_rating else 0 %}
+                        {% for i in range(1, 6) %}
+                            <i class="fas fa-star{% if i > rating %} text-muted{% else %} text-warning{% endif %}" style="font-size: 1.5rem;"></i>
+                        {% endfor %}
+                    </div>
+                    <div class="text-muted">
+                        Based on {{ vendor.total_reviews or 0 }} reviews
+                    </div>
+                </div>
+                
+                <div class="col-md-8">
+                    <h5 class="mb-3">Rating Breakdown</h5>
+                    {% for rating in [5, 4, 3, 2, 1] %}
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2" style="width: 60px;">{{ rating }} star</span>
+                        <div class="progress flex-grow-1" style="height: 20px;">
+                            <div class="progress-bar bg-warning" 
+                                 role="progressbar" 
+                                 style="width: {{ rating_breakdown[rating]['percentage'] if rating_breakdown else 0 }}%"
+                                 aria-valuenow="{{ rating_breakdown[rating]['percentage'] if rating_breakdown else 0 }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <span class="ms-2" style="width: 50px;">{{ rating_breakdown[rating]['count'] if rating_breakdown else 0 }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    {% if reviews %}
+    <h4 class="mb-3">Customer Reviews</h4>
+    {% for review in reviews %}
+    <div class="card mb-3 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <strong>{{ review.retailer.name }}</strong>
+                    <span class="text-muted ms-2">
+                        <i class="fas fa-calendar"></i> 
+                        {{ review.created_at.strftime('%d %b %Y') }}
+                        {% if review.edited_at %}
+                        <small class="text-muted">(edited)</small>
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    {% set avg_rating = ((review.rating_quality + review.rating_delay + review.rating_communication) / 3)|round|int %}
+                    {% for i in range(1, 6) %}
+                        <i class="fas fa-star{% if i > avg_rating %} text-muted{% else %} text-warning{% endif %}"></i>
+                    {% endfor %}
+                    <span class="ms-2 fw-bold">{{ "%.1f"|format((review.rating_quality + review.rating_delay + review.rating_communication) / 3) }}</span>
+                </div>
+            </div>
+            
+            <!-- Individual Ratings -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <small class="text-muted">Quality:</small>
+                    {% for i in range(1, 6) %}
+                        <i class="fas fa-star{% if i > review.rating_quality %} text-muted{% else %} text-warning{% endif %}" style="font-size: 0.9rem;"></i>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Delivery:</small>
+                    {% for i in range(1, 6) %}
+                        <i class="fas fa-star{% if i > review.rating_delay %} text-muted{% else %} text-warning{% endif %}" style="font-size: 0.9rem;"></i>
+                    {% endfor %}
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Communication:</small>
+                    {% for i in range(1, 6) %}
+                        <i class="fas fa-star{% if i > review.rating_communication %} text-muted{% else %} text-warning{% endif %}" style="font-size: 0.9rem;"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Comment -->
+            {% if review.comment %}
+            <div class="review-comment p-3 bg-light rounded">
+                <i class="fas fa-quote-left text-muted"></i>
+                <span class="ms-2">{{ review.comment }}</span>
+                <i class="fas fa-quote-right text-muted ms-2"></i>
+            </div>
+            {% endif %}
+            
+            <!-- Order Reference -->
+            <div class="mt-2">
+                <small class="text-muted">
+                    <i class="fas fa-shopping-bag"></i> Order #{{ review.order_id }}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-star fa-3x mb-3"></i>
+        <h5>No Reviews Yet</h5>
+        <p>This vendor hasn't received any reviews yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.review-comment {
+    font-style: italic;
+    border-left: 3px solid #ffc107;
+}
+</style>
+
+{% endblock %}
