@@ -120,27 +120,29 @@ def seed_data():
         
         # Create sample products
         products_data = [
-            {'name': 'Tomatoes', 'category': 'vegetable', 'price': 40, 'stock': 100, 'moq': 5},
-            {'name': 'Onions', 'category': 'vegetable', 'price': 30, 'stock': 150, 'moq': 10},
-            {'name': 'Potatoes', 'category': 'vegetable', 'price': 25, 'stock': 200, 'moq': 10},
-            {'name': 'Carrots', 'category': 'vegetable', 'price': 35, 'stock': 80, 'moq': 5},
-            {'name': 'Apples', 'category': 'fruit', 'price': 120, 'stock': 60, 'moq': 5},
-            {'name': 'Bananas', 'category': 'fruit', 'price': 60, 'stock': 100, 'moq': 12},
+            {'product_name': 'Tomatoes', 'category': 'vegetable', 'price': 40, 'quantity': 100, 'minimum_quantity': 5},
+            {'product_name': 'Onions', 'category': 'vegetable', 'price': 30, 'quantity': 150, 'minimum_quantity': 10},
+            {'product_name': 'Potatoes', 'category': 'vegetable', 'price': 25, 'quantity': 200, 'minimum_quantity': 10},
+            {'product_name': 'Carrots', 'category': 'vegetable', 'price': 35, 'quantity': 80, 'minimum_quantity': 5},
+            {'product_name': 'Apples', 'category': 'fruit', 'price': 120, 'quantity': 60, 'minimum_quantity': 5},
+            {'product_name': 'Bananas', 'category': 'fruit', 'price': 60, 'quantity': 100, 'minimum_quantity': 12},
         ]
         
         added = 0
         for data in products_data:
-            existing = Product.query.filter_by(name=data['name'], vendor_id=vendor.id).first()
+            existing = Product.query.filter_by(product_name=data['product_name'], vendor_id=vendor.id).first()
             if not existing:
                 product = Product(
-                    name=data['name'],
-                    description=f'Fresh {data["name"]} from Koyambedu',
+                    product_name=data['product_name'],
+                    description=f'Fresh {data["product_name"]} from Koyambedu',
                     category=data['category'],
                     price=data['price'],
-                    stock_quantity=data['stock'],
-                    moq=data['moq'],
+                    quantity=data['quantity'],
+                    moq_enabled=True,
+                    minimum_quantity=data['minimum_quantity'],
                     unit='kg',
                     vendor_id=vendor.id,
+                    is_active=True,
                     created_at=datetime.utcnow()
                 )
                 db.session.add(product)

@@ -60,34 +60,34 @@ def full_import():
         # Import Products (linked to vendors)
         products_to_create = [
             # Vendor 1 - Vegetables
-            {'product_name': 'Tomatoes', 'category': 'vegetable', 'price': 40, 'quantity': 100, 'moq': 5, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Onions', 'category': 'vegetable', 'price': 30, 'quantity': 150, 'moq': 10, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Potatoes', 'category': 'vegetable', 'price': 25, 'quantity': 200, 'moq': 10, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Carrots', 'category': 'vegetable', 'price': 35, 'quantity': 80, 'moq': 5, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Cabbage', 'category': 'vegetable', 'price': 20, 'quantity': 60, 'moq': 5, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Cauliflower', 'category': 'vegetable', 'price': 45, 'quantity': 40, 'moq': 5, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Green Beans', 'category': 'vegetable', 'price': 60, 'quantity': 50, 'moq': 3, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Tomatoes', 'category': 'vegetable', 'price': 40, 'quantity': 100, 'minimum_quantity': 5, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Onions', 'category': 'vegetable', 'price': 30, 'quantity': 150, 'minimum_quantity': 10, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Potatoes', 'category': 'vegetable', 'price': 25, 'quantity': 200, 'minimum_quantity': 10, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Carrots', 'category': 'vegetable', 'price': 35, 'quantity': 80, 'minimum_quantity': 5, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Cabbage', 'category': 'vegetable', 'price': 20, 'quantity': 60, 'minimum_quantity': 5, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Cauliflower', 'category': 'vegetable', 'price': 45, 'quantity': 40, 'minimum_quantity': 5, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Green Beans', 'category': 'vegetable', 'price': 60, 'quantity': 50, 'minimum_quantity': 3, 'vendor_email': 'vendor1@freshconnect.com'},
             
             # Vendor 2 - Fruits
-            {'product_name': 'Apples', 'category': 'fruit', 'price': 120, 'quantity': 60, 'moq': 5, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Bananas', 'category': 'fruit', 'price': 60, 'quantity': 100, 'moq': 12, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Oranges', 'category': 'fruit', 'price': 80, 'quantity': 70, 'moq': 6, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Mangoes', 'category': 'fruit', 'price': 150, 'quantity': 50, 'moq': 12, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Grapes', 'category': 'fruit', 'price': 100, 'quantity': 40, 'moq': 5, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Watermelon', 'category': 'fruit', 'price': 30, 'quantity': 30, 'moq': 1, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Apples', 'category': 'fruit', 'price': 120, 'quantity': 60, 'minimum_quantity': 5, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Bananas', 'category': 'fruit', 'price': 60, 'quantity': 100, 'minimum_quantity': 12, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Oranges', 'category': 'fruit', 'price': 80, 'quantity': 70, 'minimum_quantity': 6, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Mangoes', 'category': 'fruit', 'price': 150, 'quantity': 50, 'minimum_quantity': 12, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Grapes', 'category': 'fruit', 'price': 100, 'quantity': 40, 'minimum_quantity': 5, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Watermelon', 'category': 'fruit', 'price': 30, 'quantity': 30, 'minimum_quantity': 1, 'vendor_email': 'vendor2@freshconnect.com'},
             
             # Vendor 3 - Grains
-            {'product_name': 'Rice', 'category': 'grain', 'price': 50, 'quantity': 500, 'moq': 25, 'vendor_email': 'vendor3@freshconnect.com'},
-            {'product_name': 'Wheat', 'category': 'grain', 'price': 45, 'quantity': 400, 'moq': 25, 'vendor_email': 'vendor3@freshconnect.com'},
-            {'product_name': 'Lentils (Dal)', 'category': 'grain', 'price': 80, 'quantity': 200, 'moq': 10, 'vendor_email': 'vendor3@freshconnect.com'},
-            {'product_name': 'Chickpeas', 'category': 'grain', 'price': 90, 'quantity': 150, 'moq': 10, 'vendor_email': 'vendor3@freshconnect.com'},
-            {'product_name': 'Kidney Beans', 'category': 'grain', 'price': 100, 'quantity': 100, 'moq': 5, 'vendor_email': 'vendor3@freshconnect.com'},
+            {'product_name': 'Rice', 'category': 'grain', 'price': 50, 'quantity': 500, 'minimum_quantity': 25, 'vendor_email': 'vendor3@freshconnect.com'},
+            {'product_name': 'Wheat', 'category': 'grain', 'price': 45, 'quantity': 400, 'minimum_quantity': 25, 'vendor_email': 'vendor3@freshconnect.com'},
+            {'product_name': 'Lentils (Dal)', 'category': 'grain', 'price': 80, 'quantity': 200, 'minimum_quantity': 10, 'vendor_email': 'vendor3@freshconnect.com'},
+            {'product_name': 'Chickpeas', 'category': 'grain', 'price': 90, 'quantity': 150, 'minimum_quantity': 10, 'vendor_email': 'vendor3@freshconnect.com'},
+            {'product_name': 'Kidney Beans', 'category': 'grain', 'price': 100, 'quantity': 100, 'minimum_quantity': 5, 'vendor_email': 'vendor3@freshconnect.com'},
             
             # Additional items
-            {'product_name': 'Spinach', 'category': 'vegetable', 'price': 25, 'quantity': 40, 'moq': 2, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Pineapple', 'category': 'fruit', 'price': 50, 'quantity': 25, 'moq': 1, 'vendor_email': 'vendor2@freshconnect.com'},
-            {'product_name': 'Corn', 'category': 'vegetable', 'price': 40, 'quantity': 80, 'moq': 10, 'vendor_email': 'vendor1@freshconnect.com'},
-            {'product_name': 'Papaya', 'category': 'fruit', 'price': 40, 'quantity': 30, 'moq': 1, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Spinach', 'category': 'vegetable', 'price': 25, 'quantity': 40, 'minimum_quantity': 2, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Pineapple', 'category': 'fruit', 'price': 50, 'quantity': 25, 'minimum_quantity': 1, 'vendor_email': 'vendor2@freshconnect.com'},
+            {'product_name': 'Corn', 'category': 'vegetable', 'price': 40, 'quantity': 80, 'minimum_quantity': 10, 'vendor_email': 'vendor1@freshconnect.com'},
+            {'product_name': 'Papaya', 'category': 'fruit', 'price': 40, 'quantity': 30, 'minimum_quantity': 1, 'vendor_email': 'vendor2@freshconnect.com'},
         ]
         
         products_created = 0
@@ -108,7 +108,8 @@ def full_import():
                     category=prod_data['category'],
                     price=prod_data['price'],
                     quantity=prod_data['quantity'],
-                    moq=prod_data.get('moq', 1),
+                    moq_enabled=True,
+                    minimum_quantity=prod_data.get('minimum_quantity', 1),
                     unit='kg',
                     vendor_id=vendor_map[vendor_email],
                     is_active=True,
