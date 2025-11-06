@@ -37,6 +37,69 @@ def responsive_demo():
     """Demo page showing mobile-first responsive design"""
     return render_template('responsive_demo.html')
 
+@bp.route('/debug-session')
+def debug_session():
+    """Debug route to check session and authentication status"""
+    from flask import session
+    
+    info = {
+        'is_authenticated': current_user.is_authenticated,
+        'user_id': current_user.id if current_user.is_authenticated else None,
+        'has_user_type': hasattr(current_user, 'user_type') if current_user.is_authenticated else False,
+        'user_type': getattr(current_user, 'user_type', None) if current_user.is_authenticated else None,
+        'session_keys': list(session.keys()),
+        'flask_login_id': session.get('_user_id', None)
+    }
+    
+    if current_user.is_authenticated:
+        try:
+            info['user_name'] = current_user.name
+            info['user_email'] = current_user.email
+        except Exception as e:
+            info['user_load_error'] = str(e)
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Session Debug</title>
+        <style>
+            body {{ font-family: monospace; padding: 20px; background: #1e1e1e; color: #00ff00; }}
+            .info {{ background: #2d2d2d; padding: 20px; border-radius: 8px; margin: 10px 0; }}
+            .key {{ color: #00ffff; }}
+            .value {{ color: #ffff00; }}
+            .error {{ color: #ff0000; }}
+            .success {{ color: #00ff00; }}
+            a {{ color: #00ffff; margin: 10px; display: inline-block; }}
+        </style>
+    </head>
+    <body>
+        <h1>🔍 Session Debug Information</h1>
+        <div class="info">
+            <h3>Authentication Status:</h3>
+            <p><span class="key">Is Authenticated:</span> <span class="{'success' if info['is_authenticated'] else 'error'}">{info['is_authenticated']}</span></p>
+            <p><span class="key">User ID:</span> <span class="value">{info['user_id']}</span></p>
+            <p><span class="key">Has user_type:</span> <span class="value">{info['has_user_type']}</span></p>
+            <p><span class="key">User Type:</span> <span class="value">{info['user_type']}</span></p>
+            <p><span class="key">Session User ID:</span> <span class="value">{info['flask_login_id']}</span></p>
+        </div>
+        <div class="info">
+            <h3>Session Keys:</h3>
+            <p><span class="value">{info['session_keys']}</span></p>
+        </div>
+        {'<div class="info"><h3>User Info:</h3><p>Name: ' + info.get('user_name', 'N/A') + '</p><p>Email: ' + info.get('user_email', 'N/A') + '</p></div>' if info['is_authenticated'] else ''}
+        {'<div class="info error"><h3>User Load Error:</h3><p>' + info.get('user_load_error', '') + '</p></div>' if 'user_load_error' in info else ''}
+        <div class="info">
+            <h3>Quick Actions:</h3>
+            <a href="/auth/logout">Logout & Clear Session</a>
+            <a href="/auth/login">Go to Login</a>
+            <a href="/">Home</a>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
 @bp.route('/health')
 def health():
     """Health check endpoint for Railway deployment"""

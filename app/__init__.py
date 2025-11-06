@@ -68,6 +68,12 @@ def create_app(config_name=None):
     from app.models import User
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        try:
+            return User.query.get(int(user_id))
+        except Exception as e:
+            print(f"❌ User loader error: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
     
     return app
