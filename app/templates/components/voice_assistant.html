@@ -1,0 +1,373 @@
+<!-- Voice Assistant Component -->
+<div class="voice-assistant-container">
+    <!-- Voice Button (Floating) -->
+    <button id="voiceButton" class="voice-btn" title="Click to speak">
+        <i id="voiceIcon" class="fas fa-microphone-slash"></i>
+        <span id="voiceIndicator" class="voice-indicator"></span>
+    </button>
+
+    <!-- Voice Status -->
+    <div id="voiceStatus" class="voice-status" style="display: none;"></div>
+
+    <!-- Voice Transcript -->
+    <div id="voiceTranscriptContainer" class="voice-transcript-container" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <h6><i class="fas fa-comment-dots"></i> You said:</h6>
+                <p id="voiceTranscript" class="transcript"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Results -->
+    <div id="voiceResults" class="voice-results mt-4" style="display: none;"></div>
+
+    <!-- Voice Suggestions -->
+    <div id="voiceSuggestions" class="voice-suggestions mt-3" style="display: none;"></div>
+
+    <!-- Voice Examples -->
+    <div id="voiceExamples" class="voice-examples mt-3" style="display: none;"></div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="voiceHelpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-question-circle"></i> Voice Assistant Help
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="voiceHelpContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Voice Assistant Styles -->
+<style>
+/* Voice Button (Floating) */
+.voice-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.voice-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+}
+
+.voice-btn:active {
+    transform: scale(0.95);
+}
+
+.voice-btn.listening {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.voice-btn.processing {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 4px 20px rgba(245, 87, 108, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 30px rgba(245, 87, 108, 0.8), 0 0 0 15px rgba(245, 87, 108, 0.2);
+    }
+}
+
+.voice-indicator {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+    animation: ripple 1.5s ease-in-out infinite;
+    display: none;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Voice Status */
+.voice-status {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    min-width: 300px;
+    max-width: 500px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Voice Transcript */
+.voice-transcript-container {
+    position: fixed;
+    bottom: 110px;
+    right: 30px;
+    max-width: 350px;
+    z-index: 999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.transcript {
+    font-size: 16px;
+    margin: 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.transcript.interim {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.transcript.final {
+    color: #212529;
+    font-weight: 500;
+}
+
+/* Voice Results */
+.voice-results {
+    animation: slideUp 0.4s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.product-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Voice Suggestions */
+.voice-suggestions {
+    background: #fff3cd;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ffc107;
+}
+
+.suggestion-link {
+    color: #0d6efd;
+    text-decoration: none;
+    display: block;
+    padding: 5px 0;
+}
+
+.suggestion-link:hover {
+    text-decoration: underline;
+}
+
+/* Voice Examples */
+.voice-examples {
+    background: #d1ecf1;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #0dcaf0;
+}
+
+/* Help Button */
+.voice-help-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 30px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #667eea;
+    color: #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: all 0.3s ease;
+}
+
+.voice-help-btn:hover {
+    background: #667eea;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .voice-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+        bottom: 80px;
+        right: 20px;
+    }
+    
+    .voice-status {
+        min-width: 90%;
+        left: 5%;
+        transform: none;
+    }
+    
+    .voice-transcript-container {
+        right: 20px;
+        bottom: 140px;
+        max-width: calc(100% - 40px);
+    }
+    
+    .voice-help-btn {
+        bottom: 140px;
+        right: 20px;
+    }
+}
+
+/* Add to Cart Form */
+.add-to-cart-form {
+    margin-top: 10px;
+}
+</style>
+
+<!-- Voice Assistant Script -->
+<script src="{{ url_for('static', filename='js/voice_assistant.js') }}"></script>
+
+<!-- Quick Start Guide (Optional - shows on first visit) -->
+<div id="voiceQuickStart" class="voice-quick-start" style="display: none;">
+    <div class="card">
+        <div class="card-body">
+            <h5><i class="fas fa-magic"></i> Try Voice Search!</h5>
+            <p>Click the purple button and say:</p>
+            <ul class="list-unstyled">
+                <li><i class="fas fa-microphone text-primary"></i> "Find tomatoes less than 50 rupees"</li>
+                <li><i class="fas fa-microphone text-primary"></i> "Show me vegetables"</li>
+                <li><i class="fas fa-microphone text-primary"></i> "Go to my cart"</li>
+            </ul>
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('voiceQuickStart').style.display='none'">
+                Got it!
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show quick start guide on first visit
+if (!localStorage.getItem('voiceGuideShown')) {
+    setTimeout(() => {
+        const guide = document.getElementById('voiceQuickStart');
+        if (guide) {
+            guide.style.display = 'block';
+            guide.style.position = 'fixed';
+            guide.style.bottom = '110px';
+            guide.style.right = '30px';
+            guide.style.zIndex = '1001';
+            guide.style.maxWidth = '350px';
+            
+            // Mark as shown
+            localStorage.setItem('voiceGuideShown', 'true');
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                guide.style.display = 'none';
+            }, 10000);
+        }
+    }, 2000);
+}
+
+// Handle add-to-cart forms with AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('add-to-cart-form')) {
+            e.preventDefault();
+            
+            fetch(e.target.action, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const statusEl = document.getElementById('voiceStatus');
+                    if (statusEl) {
+                        statusEl.className = 'alert alert-success fade show';
+                        statusEl.textContent = 'Added to cart!';
+                        statusEl.style.display = 'block';
+                        setTimeout(() => {
+                            statusEl.style.display = 'none';
+                        }, 3000);
+                    }
+                    
+                    // Update cart count if element exists
+                    const cartCount = document.getElementById('cart-count');
+                    if (cartCount && data.cart_count) {
+                        cartCount.textContent = data.cart_count;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Add to cart error:', error);
+            });
+        }
+    });
+});
+</script>

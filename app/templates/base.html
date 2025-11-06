@@ -236,5 +236,10 @@
     {% if current_user.is_authenticated %}
     {% include 'components/chatbot.html' %}
     {% endif %}
+    
+    <!-- Voice Assistant (For Retailers) -->
+    {% if current_user.is_authenticated and current_user.user_type == 'retailer' %}
+    {% include 'components/voice_assistant.html' %}
+    {% endif %}
 </body>
 </html>
