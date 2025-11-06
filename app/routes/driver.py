@@ -356,6 +356,12 @@ def delivery_detail(order_id):
         flash('Unauthorized access', 'danger')
         return redirect(url_for('driver.deliveries'))
     
+    # Get driver assignment for this order
+    assignment = DriverAssignment.query.filter_by(
+        driver_id=driver.id,
+        order_id=order_id
+    ).first()
+    
     # Get location and step details
     location_detail = OrderLocationDetail.query.filter_by(order_id=order_id).first()
     delivery_steps = DeliveryStep.query.filter_by(order_id=order_id).order_by(DeliveryStep.step_number).all()
@@ -363,5 +369,6 @@ def delivery_detail(order_id):
     return render_template('driver/delivery_detail.html',
                          driver=driver,
                          order=order,
+                         assignment=assignment,
                          location=location_detail,
                          steps=delivery_steps)
