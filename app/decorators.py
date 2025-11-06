@@ -31,17 +31,28 @@ def retailer_required(f):
                 flash('Please login to access this page', 'warning')
                 return redirect(url_for('auth.login'))
             
+            # More defensive check with better error message
+            if not hasattr(current_user, 'user_type'):
+                flash('Session expired. Please login again.', 'warning')
+                return redirect(url_for('auth.logout'))
+            
             if current_user.user_type != 'retailer':
                 flash('Retailer access required', 'danger')
                 return redirect(url_for('auth.login'))
             
             return f(*args, **kwargs)
+        except AttributeError as e:
+            print(f"❌ AttributeError in retailer_required: {e}")
+            print(f"   Current user: {current_user}")
+            print(f"   Is authenticated: {current_user.is_authenticated}")
+            flash('Session expired. Please logout and login again.', 'warning')
+            return redirect(url_for('auth.logout'))
         except Exception as e:
             print(f"❌ Decorator error in retailer_required: {e}")
             import traceback
             traceback.print_exc()
-            flash('Authentication error. Please login again.', 'danger')
-            return redirect(url_for('auth.login'))
+            flash('Authentication error. Please logout and login again.', 'danger')
+            return redirect(url_for('auth.logout'))
     return decorated_function
 
 def driver_required(f):
