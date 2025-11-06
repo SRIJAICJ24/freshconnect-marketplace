@@ -82,101 +82,90 @@ def dashboard():
 @retailer_required
 def browse():
     try:
-        print("🔍 Browse route called")
-        
-        # AUTO-MIGRATION: Try to add missing columns if needed
-        try:
-            from sqlalchemy import text, inspect
-            inspector = inspect(db.engine)
-            columns = [col['name'] for col in inspector.get_columns('products')]
-            
-            missing_columns = []
-            if 'freshness_level' not in columns:
-                missing_columns.append("ALTER TABLE products ADD COLUMN freshness_level VARCHAR(20) DEFAULT 'TODAY'")
-            if 'quality_tier' not in columns:
-                missing_columns.append("ALTER TABLE products ADD COLUMN quality_tier VARCHAR(20) DEFAULT 'GOOD'")
-            if 'certification' not in columns:
-                missing_columns.append("ALTER TABLE products ADD COLUMN certification VARCHAR(255)")
-            if 'stock_quantity' not in columns:
-                missing_columns.append("ALTER TABLE products ADD COLUMN stock_quantity FLOAT DEFAULT 0")
-            
-            if missing_columns:
-                print(f"⚠️ Missing columns detected, auto-migrating...")
-                with db.engine.connect() as conn:
-                    for sql in missing_columns:
-                        try:
-                            conn.execute(text(sql))
-                            conn.commit()
-                            print(f"✅ {sql[:50]}...")
-                        except Exception as col_error:
-                            print(f"⚠️ Column add warning: {col_error}")
-                print("✅ Auto-migration complete!")
-        except Exception as migrate_error:
-            print(f"⚠️ Auto-migration failed (continuing anyway): {migrate_error}")
+        print("🔍 Browse route called - ULTRA SAFE MODE")
         
         category = request.args.get('category')
         search = request.args.get('search')
         
         print(f"   Category: {category}, Search: {search}")
         
-        # Build query with only SAFE fields (ones that definitely exist)
-        query = db.session.query(
-            Product.id,
-            Product.product_name,
-            Product.category,
-            Product.price,
-            Product.quantity,
-            Product.unit,
-            Product.vendor_id,
-            Product.image_filename,
-            Product.is_active
-        ).filter(Product.is_active == True)
+        # ULTRA SAFE: Query using raw SQL to avoid ORM column issues
+        from sqlalchemy import text
+        
+        sql = """
+            SELECT 
+                id, 
+                product_name, 
+                category, 
+                price, 
+                quantity, 
+                unit, 
+                vendor_id, 
+                image_filename
+            FROM products 
+            WHERE is_active = true
+        """
+        
+        params = {}
         
         if category:
-            query = query.filter(Product.category == category)
+            sql += " AND category = :category"
+            params['category'] = category
         
         if search:
-            query = query.filter(Product.product_name.ilike(f'%{search}%'))
+            sql += " AND product_name ILIKE :search"
+            params['search'] = f'%{search}%'
         
-        print(f"   Executing safe query...")
-        result = query.all()
-        print(f"   Found {len(result)} products")
+        print(f"   Executing ultra-safe SQL query...")
         
-        # Convert to product-like objects with safe defaults
+        with db.engine.connect() as conn:
+            result = conn.execute(text(sql), params)
+            rows = result.fetchall()
+        
+        print(f"   ✅ Found {len(rows)} products using raw SQL")
+        
+        # Convert to simple product objects
         products = []
-        for row in result:
+        for row in rows:
             product = type('Product', (), {})()
-            product.id = row.id
-            product.product_name = row.product_name
-            product.category = row.category
-            product.price = row.price
-            product.quantity = row.quantity
-            product.unit = row.unit
-            product.vendor_id = row.vendor_id
-            product.image_filename = row.image_filename
-            product.is_active = row.is_active
-            # Add safe defaults for new fields
+            product.id = row[0]
+            product.product_name = row[1]
+            product.category = row[2]
+            product.price = row[3]
+            product.quantity = row[4]
+            product.unit = row[5]
+            product.vendor_id = row[6]
+            product.image_filename = row[7]
+            product.is_active = True
+            # Add safe defaults
             product.freshness_level = 'TODAY'
             product.quality_tier = 'GOOD'
-            product.stock_quantity = row.quantity
+            product.stock_quantity = row[4]  # Use quantity
             product.certification = None
             products.append(product)
         
-        categories = db.session.query(Product.category).distinct().all()
+        # Get categories using raw SQL too
+        with db.engine.connect() as conn:
+            cat_result = conn.execute(text("SELECT DISTINCT category FROM products WHERE is_active = true"))
+            categories = [(row[0],) for row in cat_result.fetchall()]
+        
         print(f"   Found {len(categories)} categories")
         print(f"   ✅ Rendering template with {len(products)} products...")
         
         return render_template('retailer/browse.html',
                              products=products,
                              categories=[c[0] for c in categories])
+                             
     except Exception as e:
-        print(f"❌ Browse error: {e}")
+        print(f"❌ CRITICAL Browse error: {e}")
         print(f"   Error type: {type(e).__name__}")
         import traceback
         traceback.print_exc()
         
-        flash('Error loading products. Database may need updating.', 'danger')
-        return redirect(url_for('retailer.dashboard'))
+        # Last resort fallback
+        return render_template('error.html', 
+                             code=500, 
+                             message=f'Unable to load products: {str(e)[:200]}'), 500
 
 @bp.route('/product/<int:product_id>')
 @retailer_required
