@@ -11,27 +11,55 @@ bp = Blueprint('driver', __name__, url_prefix='/driver')
 @bp.route('/dashboard')
 @driver_required
 def dashboard():
-    driver = Driver.query.filter_by(user_id=current_user.id).first()
-    
-    pending = DriverAssignment.query.filter_by(
-        driver_id=driver.id,
-        assignment_status='assigned'
-    ).count()
-    
-    active = DriverAssignment.query.filter_by(
-        driver_id=driver.id,
-        assignment_status='in_transit'
-    ).count()
-    
-    return render_template('driver/dashboard.html',
-                         driver=driver,
-                         pending=pending,
-                         active=active)
+    try:
+        driver = Driver.query.filter_by(user_id=current_user.id).first()
+        
+        # If no driver profile exists, create one
+        if not driver:
+            driver = Driver(
+                user_id=current_user.id,
+                vehicle_type='bike',
+                vehicle_number='PENDING',
+                license_number='PENDING',
+                status='available',
+                current_load_kg=0,
+                max_capacity_kg=50,
+                total_deliveries=0,
+                rating=5.0
+            )
+            db.session.add(driver)
+            db.session.commit()
+            print(f"✅ Created driver profile for user {current_user.id}")
+        
+        pending = DriverAssignment.query.filter_by(
+            driver_id=driver.id,
+            assignment_status='assigned'
+        ).count()
+        
+        active = DriverAssignment.query.filter_by(
+            driver_id=driver.id,
+            assignment_status='in_transit'
+        ).count()
+        
+        return render_template('driver/dashboard.html',
+                             driver=driver,
+                             pending=pending,
+                             active=active)
+    except Exception as e:
+        print(f"❌ Driver dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Error loading dashboard: {str(e)}', 'danger')
+        return redirect(url_for('main.index'))
 
 @bp.route('/assignments')
 @driver_required
 def assignments():
     driver = Driver.query.filter_by(user_id=current_user.id).first()
+    
+    if not driver:
+        flash('Driver profile not found. Please contact admin.', 'danger')
+        return redirect(url_for('driver.dashboard'))
     
     pending = DriverAssignment.query.filter_by(
         driver_id=driver.id,
@@ -46,6 +74,10 @@ def delivery(assignment_id):
     assignment = DriverAssignment.query.get_or_404(assignment_id)
     
     driver = Driver.query.filter_by(user_id=current_user.id).first()
+    if not driver:
+        flash('Driver profile not found.', 'danger')
+        return redirect(url_for('driver.dashboard'))
+    
     if assignment.driver_id != driver.id:
         flash('Unauthorized', 'danger')
         return redirect(url_for('driver.dashboard'))
@@ -97,6 +129,10 @@ def routes():
     """Show driver's planned routes with location details"""
     driver = Driver.query.filter_by(user_id=current_user.id).first()
     
+    if not driver:
+        flash('Driver profile not found.', 'danger')
+        return redirect(url_for('driver.dashboard'))
+    
     # Get planned routes
     planned_routes = DriverRoute.query.filter_by(driver_id=driver.id).all()
     
@@ -110,6 +146,10 @@ def routes():
 def deliveries():
     """Show all deliveries with location and logistics details"""
     driver = Driver.query.filter_by(user_id=current_user.id).first()
+    
+    if not driver:
+        flash('Driver profile not found.', 'danger')
+        return redirect(url_for('driver.dashboard'))
     
     # Get orders assigned to this driver
     assigned_orders = Order.query.filter_by(assigned_driver_id=driver.id).all()
@@ -136,6 +176,10 @@ def deliveries():
 def delivery_detail(order_id):
     """Show detailed delivery information with route and pricing"""
     driver = Driver.query.filter_by(user_id=current_user.id).first()
+    
+    if not driver:
+        flash('Driver profile not found.', 'danger')
+        return redirect(url_for('driver.dashboard'))
     
     order = Order.query.get_or_404(order_id)
     

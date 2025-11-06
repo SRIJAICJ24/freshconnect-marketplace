@@ -1,7 +1,7 @@
 """Admin route to seed complete database with all local data"""
 from flask import Blueprint, jsonify
 from app import db
-from app.models import User, Product
+from app.models import User, Product, Driver, Vendor, Retailer, RetailerCredit
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 
@@ -49,8 +49,46 @@ def full_import():
                 db.session.add(user)
                 db.session.flush()  # Get the ID
                 users_created += 1
+                
+                # Create role-specific profiles
                 if user_data['user_type'] == 'vendor':
                     vendor_map[user_data['email']] = user.id
+                    # Create vendor profile
+                    vendor = Vendor(
+                        user_id=user.id,
+                        business_name=user_data.get('business_name', user_data['name']),
+                        gst_number='DEMO' + str(user.id).zfill(10),
+                        shop_number=f'Shop-{user.id}',
+                        is_verified=True
+                    )
+                    db.session.add(vendor)
+                    
+                elif user_data['user_type'] == 'retailer':
+                    # Create retailer profile (no separate table, but create credit record)
+                    credit = RetailerCredit(
+                        retailer_id=user.id,
+                        credit_score=500,
+                        tier='silver',
+                        credit_limit=50000,
+                        credit_available=50000,
+                        credit_utilized=0
+                    )
+                    db.session.add(credit)
+                    
+                elif user_data['user_type'] == 'driver':
+                    # Create driver profile
+                    driver = Driver(
+                        user_id=user.id,
+                        vehicle_type='bike',
+                        vehicle_number=f'TN01AB{str(user.id).zfill(4)}',
+                        license_number=f'DL{str(user.id).zfill(10)}',
+                        status='available',
+                        current_load_kg=0,
+                        max_capacity_kg=50,
+                        total_deliveries=0,
+                        rating=5.0
+                    )
+                    db.session.add(driver)
             else:
                 if existing.user_type == 'vendor':
                     vendor_map[user_data['email']] = existing.id
