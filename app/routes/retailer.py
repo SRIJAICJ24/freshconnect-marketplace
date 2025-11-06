@@ -102,8 +102,12 @@ def browse():
                 p.unit, 
                 p.vendor_id, 
                 p.image_filename,
+                p.moq_enabled,
+                p.minimum_quantity,
                 u.name as vendor_name,
-                u.email as vendor_email
+                u.email as vendor_email,
+                u.average_rating,
+                u.total_reviews
             FROM products p
             LEFT JOIN users u ON p.vendor_id = u.id
             WHERE p.is_active = true
@@ -130,13 +134,15 @@ def browse():
         # Convert to simple product objects
         products = []
         for row in rows:
-            # Create vendor object
+            # Create vendor object with ratings
             vendor = type('User', (), {})()
             vendor.id = row[6]
-            vendor.name = row[8] if row[8] else 'Unknown Vendor'
-            vendor.email = row[9] if row[9] else ''
+            vendor.name = row[10] if row[10] else 'Unknown Vendor'
+            vendor.email = row[11] if row[11] else ''
+            vendor.average_rating = row[12] if row[12] else 0.0
+            vendor.total_reviews = row[13] if row[13] else 0
             
-            # Create product object
+            # Create product object with ALL data
             product = type('Product', (), {})()
             product.id = row[0]
             product.product_name = row[1]
@@ -146,9 +152,11 @@ def browse():
             product.unit = row[5]
             product.vendor_id = row[6]
             product.image_filename = row[7]
+            product.moq_enabled = row[8] if row[8] else False
+            product.minimum_quantity = row[9] if row[9] else 1
             product.vendor = vendor  # Add vendor relationship
             product.is_active = True
-            # Add safe defaults
+            # Add comparison system defaults (will be overridden if columns exist)
             product.freshness_level = 'TODAY'
             product.quality_tier = 'GOOD'
             product.stock_quantity = row[4]  # Use quantity

@@ -48,21 +48,113 @@
                 
                 <div class="card-body">
                     <h5 class="card-title">{{ product.product_name }}</h5>
-                    <p class="card-text">
+                    
+                    <!-- Category & Badges -->
+                    <p class="card-text mb-2">
                         <span class="badge bg-info">{{ product.category }}</span>
                         {% if product.moq_enabled %}
-                        <span class="badge bg-warning text-dark">MOQ</span>
+                        <span class="badge bg-warning text-dark" title="Minimum Order Quantity Required">
+                            <i class="fas fa-layer-group"></i> MOQ
+                        </span>
+                        {% endif %}
+                        {% if product.quality_tier == 'PREMIUM' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-crown"></i> Premium
+                        </span>
+                        {% elif product.quality_tier == 'GOOD' %}
+                        <span class="badge bg-primary">
+                            <i class="fas fa-check"></i> Good
+                        </span>
+                        {% elif product.quality_tier == 'BUDGET' %}
+                        <span class="badge bg-secondary">
+                            <i class="fas fa-tag"></i> Budget
+                        </span>
                         {% endif %}
                     </p>
                     
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <!-- Freshness & Stock -->
+                    <div class="mb-2">
+                        {% if product.freshness_level == 'TODAY' %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-leaf"></i> Fresh Today
+                        </span>
+                        {% elif product.freshness_level == 'YESTERDAY' %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-calendar-day"></i> Yesterday
+                        </span>
+                        {% elif product.freshness_level == '2DAYS' %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-calendar"></i> 2 Days Old
+                        </span>
+                        {% elif product.freshness_level == '3DAYS' %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-calendar-times"></i> 3 Days Old
+                        </span>
+                        {% endif %}
+                        
+                        {% if product.stock_quantity and product.stock_quantity > 0 %}
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-box"></i> Stock: {{ product.stock_quantity|int }} {{ product.unit }}
+                        </span>
+                        {% else %}
+                        <span class="badge bg-danger">
+                            <i class="fas fa-exclamation-circle"></i> Low Stock
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Certifications -->
+                    {% if product.certification %}
+                    <div class="mb-2">
+                        {% if 'ORGANIC' in product.certification.upper() %}
+                        <span class="badge bg-success">
+                            <i class="fas fa-seedling"></i> Organic
+                        </span>
+                        {% endif %}
+                        {% if 'FARM_FRESH' in product.certification.upper() %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-tractor"></i> Farm Fresh
+                        </span>
+                        {% endif %}
+                        {% if 'APEDA' in product.certification.upper() %}
+                        <span class="badge bg-primary">
+                            <i class="fas fa-certificate"></i> APEDA
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Price -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
                         <span class="text-success fs-4 fw-bold">₹{{ product.price }}</span>
                         <span class="text-muted">per {{ product.unit }}</span>
                     </div>
                     
-                    <p class="text-muted small mb-2">
-                        <i class="fas fa-store"></i> {{ product.vendor.business_name or product.vendor.name }}
-                    </p>
+                    <!-- Vendor Info with Rating -->
+                    <div class="mb-2 p-2 bg-light rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-store text-primary"></i>
+                                <strong>{{ product.vendor.name }}</strong>
+                            </div>
+                            <div>
+                                {% if product.vendor.average_rating and product.vendor.average_rating > 0 %}
+                                <span class="text-warning">
+                                    {% for i in range(5) %}
+                                        {% if i < product.vendor.average_rating %}
+                                        <i class="fas fa-star"></i>
+                                        {% else %}
+                                        <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <small class="text-muted">({{ product.vendor.total_reviews }} reviews)</small>
+                                {% else %}
+                                <small class="text-muted">No ratings yet</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
                     
                     {% if product.moq_enabled %}
                     <div class="alert alert-warning py-2 small">
