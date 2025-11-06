@@ -60,6 +60,61 @@
         </div>
     </div>
 
+    <!-- Driver Information Card -->
+    {% if driver_info %}
+    <div class="card mb-4 shadow-sm border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-user-circle"></i> Assigned Driver
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div class="driver-avatar">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong><i class="fas fa-user"></i> Name:</strong> {{ driver_info['name'] }}</p>
+                            <p class="mb-2"><strong><i class="fas fa-phone"></i> Phone:</strong> {{ driver_info['phone'] }}</p>
+                            <p class="mb-2"><strong><i class="fas fa-car"></i> Vehicle:</strong> {{ driver_info['vehicle_type'].title() }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong><i class="fas fa-id-card"></i> Registration:</strong> {{ driver_info['vehicle_registration'] }}</p>
+                            <p class="mb-2">
+                                <strong><i class="fas fa-star text-warning"></i> Rating:</strong> 
+                                {{ driver_info['rating'] }}/5.0
+                                <small class="text-muted">({{ driver_info['total_deliveries'] }} deliveries)</small>
+                            </p>
+                            <p class="mb-0">
+                                <strong>Status:</strong> 
+                                <span class="badge bg-{{ 'success' if driver_info['status'] == 'available' else 'warning' }}">
+                                    {{ driver_info['status'].replace('_', ' ').title() }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    {% if driver_info.get('estimated_delivery') %}
+                    <div class="alert alert-info mt-3 mb-0">
+                        <i class="fas fa-clock"></i> 
+                        <strong>Estimated Delivery:</strong> 
+                        {{ driver_info['estimated_delivery'].strftime('%d %b %Y, %I:%M %p') }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif order.order_status in ['payment_confirmed', 'pending'] %}
+    <div class="alert alert-warning mb-4">
+        <i class="fas fa-hourglass-half"></i> 
+        <strong>Driver Assignment Pending</strong> - A driver will be assigned soon after payment confirmation.
+    </div>
+    {% endif %}
+
     <!-- Progress Bar -->
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
@@ -78,7 +133,6 @@
             </div>
         </div>
     </div>
-
     <!-- Timeline -->
     <div class="card shadow-lg border-0 mb-4">
         <div class="card-header bg-success text-white">

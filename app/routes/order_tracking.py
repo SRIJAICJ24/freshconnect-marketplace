@@ -29,6 +29,31 @@ def track_order(order_id):
         flash('Unauthorized access', 'danger')
         return redirect(url_for('vendor.dashboard'))
     
+    # Get driver assignment info
+    from app.models import Driver, DriverAssignment
+    driver_info = None
+    driver_assignment = None
+    
+    if order.assigned_driver_id:
+        driver = Driver.query.filter_by(user_id=order.assigned_driver_id).first()
+        driver_assignment = DriverAssignment.query.filter_by(order_id=order_id).first()
+        
+        if driver:
+            driver_info = {
+                'id': driver.id,
+                'name': driver.user.name,
+                'phone': driver.user.phone,
+                'vehicle_type': driver.vehicle_type,
+                'vehicle_registration': driver.vehicle_registration,
+                'rating': driver.rating,
+                'total_deliveries': driver.total_deliveries,
+                'status': driver.status
+            }
+            
+            if driver_assignment:
+                driver_info['assignment_status'] = driver_assignment.assignment_status
+                driver_info['estimated_delivery'] = driver_assignment.estimated_delivery_time
+    
     # Get status log
     status_logs = OrderStatusLog.query.filter_by(
         order_id=order_id
@@ -40,7 +65,9 @@ def track_order(order_id):
     return render_template('orders/track_order.html',
                          order=order,
                          status_logs=status_logs,
-                         progress=progress)
+                         progress=progress,
+                         driver_info=driver_info,
+                         driver_assignment=driver_assignment)
 
 
 @bp.route('/<int:order_id>/update-status', methods=['POST'])
