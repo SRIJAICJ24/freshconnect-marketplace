@@ -61,8 +61,15 @@ def login():
         user = User.query.filter_by(email=email).first()
         
         if user and user.check_password(password):
-            login_user(user)
+            # Login with remember=True for persistent session
+            login_user(user, remember=True)
             print(f"✅ User {user.id} ({user.user_type}) logged in successfully")
+            print(f"   Session will be remembered")
+            
+            # Force session save
+            from flask import session as flask_session
+            flask_session.modified = True
+            
             flash('Logged in successfully!', 'success')
             
             try:

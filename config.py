@@ -13,9 +13,12 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     PERMANENT_SESSION_LIFETIME = timedelta(days=7)
-    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = False  # Changed: Railway proxy handles HTTPS
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SAMESITE = None  # Changed: More permissive for Railway
+    REMEMBER_COOKIE_DURATION = timedelta(days=7)
+    REMEMBER_COOKIE_SECURE = False  # Changed: Railway proxy handles HTTPS
+    REMEMBER_COOKIE_HTTPONLY = True
     
     UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER') or 'app/static/images/products'
     MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH') or 5242880)

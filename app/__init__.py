@@ -19,9 +19,19 @@ def create_app(config_name=None):
     CORS(app)
     
     db.init_app(app)
+    
+    # Configure login manager with better session handling
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please log in'
+    login_manager.session_protection = 'strong'  # Protect against session hijacking
+    login_manager.refresh_view = 'auth.login'
+    
+    # Make sessions permanent by default
+    @app.before_request
+    def make_session_permanent():
+        from flask import session
+        session.permanent = True
     
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
