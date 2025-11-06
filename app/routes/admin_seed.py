@@ -71,13 +71,13 @@ def full_import():
                     driver = Driver(
                         user_id=user.id,
                         vehicle_type='bike',
-                        vehicle_number=f'TN01AB{str(user.id).zfill(4)}',
-                        license_number=f'DL{str(user.id).zfill(10)}',
+                        vehicle_registration=f'TN01AB{str(user.id).zfill(4)}',
                         status='available',
                         current_load_kg=0,
-                        max_capacity_kg=50,
+                        vehicle_capacity_kg=50,
                         total_deliveries=0,
-                        rating=5.0
+                        rating=5.0,
+                        is_active=True
                     )
                     db.session.add(driver)
             else:

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import Driver, DriverAssignment, Order, DriverRoute, DeliveryStep, OrderLocationDetail
+from app.models import Driver, DriverAssignment, Order, DriverRoute, DeliveryStep, OrderLocationDetail, OrderItem, Product, User
 from app.decorators import driver_required
 from app.driver_service import MockDriverService
 from datetime import datetime
@@ -12,6 +12,66 @@ bp = Blueprint('driver', __name__, url_prefix='/driver')
 @driver_required
 def dashboard():
     try:
+        # Start a transaction
+        db.session.begin()
+        
+        # Get or create driver profile
+        driver = Driver.query.filter_by(user_id=current_user.id).first()
+        
+        # If no driver profile exists, create one with proper field names
+        if not driver:
+            driver = Driver(
+                user_id=current_user.id,
+                vehicle_type='bike',
+                vehicle_registration='PENDING',
+                status='available',
+                current_load_kg=0,
+                vehicle_capacity_kg=50,
+                total_deliveries=0,
+                rating=5.0,
+                is_active=True
+            )
+            db.session.add(driver)
+            db.session.commit()
+            print(f"✅ Created driver profile for user {current_user.id}")
+        
+        # Get pending assignments count
+        pending = DriverAssignment.query.filter_by(
+            driver_id=driver.id,
+            assignment_status='assigned'
+        ).count()
+        
+        # Get active deliveries count
+        active = DriverAssignment.query.filter_by(
+            driver_id=driver.id,
+            assignment_status='in_transit'
+        ).count()
+        
+        # Commit any pending transactions
+        db.session.commit()
+        
+        return render_template('driver/dashboard.html',
+                             driver=driver,
+                             pending=pending,
+                             active=active)
+                             
+    except Exception as e:
+        # Rollback in case of error
+        db.session.rollback()
+        print(f"❌ Driver dashboard error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading dashboard. Please try again or contact support.', 'danger')
+        return redirect(url_for('main.index'))
+
+@bp.route('/assignments')
+@driver_required
+def assignments():
+    try:
+        # Start a transaction
+        db.session.begin()
+        
+        # Get driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         
         # If no driver profile exists, create one
@@ -19,106 +79,277 @@ def dashboard():
             driver = Driver(
                 user_id=current_user.id,
                 vehicle_type='bike',
-                vehicle_number='PENDING',
-                license_number='PENDING',
+                vehicle_registration='PENDING',
                 status='available',
                 current_load_kg=0,
-                max_capacity_kg=50,
+                vehicle_capacity_kg=50,
                 total_deliveries=0,
-                rating=5.0
+                rating=5.0,
+                is_active=True
             )
             db.session.add(driver)
             db.session.commit()
             print(f"✅ Created driver profile for user {current_user.id}")
         
-        pending = DriverAssignment.query.filter_by(
-            driver_id=driver.id,
-            assignment_status='assigned'
-        ).count()
+        # Get pending assignments with order and product details
+        pending_assignments = db.session.query(
+            DriverAssignment,
+            Order,
+            Product,
+            User
+        ).join(
+            Order, DriverAssignment.order_id == Order.id
+        ).join(
+            OrderItem, Order.id == OrderItem.order_id
+        ).join(
+            Product, OrderItem.product_id == Product.id
+        ).join(
+            User, Product.vendor_id == User.id
+        ).filter(
+            DriverAssignment.driver_id == driver.id,
+            DriverAssignment.assignment_status == 'assigned'
+        ).all()
         
-        active = DriverAssignment.query.filter_by(
-            driver_id=driver.id,
-            assignment_status='in_transit'
-        ).count()
+        # Commit transaction
+        db.session.commit()
         
-        return render_template('driver/dashboard.html',
-                             driver=driver,
-                             pending=pending,
-                             active=active)
+        return render_template('driver/assignments.html', 
+                             assignments=pending_assignments,
+                             driver=driver)
+                             
     except Exception as e:
-        print(f"❌ Driver dashboard error: {e}")
+        # Rollback in case of error
+        db.session.rollback()
+        print(f"❌ Error in assignments route: {str(e)}")
         import traceback
         traceback.print_exc()
-        flash(f'Error loading dashboard: {str(e)}', 'danger')
-        return redirect(url_for('main.index'))
-
-@bp.route('/assignments')
-@driver_required
-def assignments():
-    driver = Driver.query.filter_by(user_id=current_user.id).first()
-    
-    if not driver:
-        flash('Driver profile not found. Please contact admin.', 'danger')
+        flash('Error loading assignments. Please try again or contact support.', 'danger')
         return redirect(url_for('driver.dashboard'))
-    
-    pending = DriverAssignment.query.filter_by(
-        driver_id=driver.id,
-        assignment_status='assigned'
-    ).all()
-    
-    return render_template('driver/assignments.html', assignments=pending)
 
 @bp.route('/delivery/<int:assignment_id>')
 @driver_required
 def delivery(assignment_id):
-    assignment = DriverAssignment.query.get_or_404(assignment_id)
-    
-    driver = Driver.query.filter_by(user_id=current_user.id).first()
-    if not driver:
-        flash('Driver profile not found.', 'danger')
-        return redirect(url_for('driver.dashboard'))
-    
-    if assignment.driver_id != driver.id:
-        flash('Unauthorized', 'danger')
-        return redirect(url_for('driver.dashboard'))
-    
-    return render_template('driver/delivery.html', assignment=assignment)
+    try:
+        # Start a transaction
+        db.session.begin()
+        
+        # Get driver profile
+        driver = Driver.query.filter_by(user_id=current_user.id).first()
+        if not driver:
+            flash('Driver profile not found. Please contact admin.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Get assignment with order and vendor details
+        result = db.session.query(
+            DriverAssignment,
+            Order,
+            User
+        ).join(
+            Order, DriverAssignment.order_id == Order.id
+        ).join(
+            User, Order.seller_id == User.id
+        ).filter(
+            DriverAssignment.id == assignment_id
+        ).first_or_404()
+        
+        # Unpack the query result
+        assignment, order, vendor = result
+        
+        # Verify driver authorization
+        if assignment.driver_id != driver.id:
+            flash('You are not authorized to view this delivery.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Get order items with product details
+        order_items = db.session.query(
+            OrderItem,
+            Product
+        ).join(
+            Product, OrderItem.product_id == Product.id
+        ).filter(
+            OrderItem.order_id == order.id
+        ).all()
+        
+        # Get delivery steps
+        delivery_steps = DeliveryStep.query.filter_by(
+            order_id=order.id
+        ).order_by(
+            DeliveryStep.step_number
+        ).all()
+        
+        # Commit transaction
+        db.session.commit()
+        
+        return render_template('driver/delivery.html',
+                            assignment=assignment,
+                            order=order,
+                            order_items=order_items,
+                            vendor=vendor,
+                            delivery_steps=delivery_steps,
+                            driver=driver)
+                            
+    except Exception as e:
+        # Rollback in case of error
+        db.session.rollback()
+        print(f"❌ Error in delivery route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading delivery details. Please try again or contact support.', 'danger')
+        return redirect(url_for('driver.assignments'))
 
 @bp.route('/delivery/<int:assignment_id>/pickup', methods=['POST'])
 @driver_required
 def mark_pickup(assignment_id):
-    assignment = DriverAssignment.query.get_or_404(assignment_id)
-    
-    assignment.assignment_status = 'picked_up'
-    assignment.actual_pickup_time = datetime.utcnow()
-    assignment.order_rel.order_status = 'in_transit'
-    
-    db.session.commit()
-    
-    print(f"[MOCK SMS] Order picked up: {assignment.order_id}")
-    
-    return redirect(url_for('driver.delivery', assignment_id=assignment_id))
+    try:
+        # Start a transaction
+        db.session.begin()
+        
+        # Get driver profile
+        driver = Driver.query.filter_by(user_id=current_user.id).first()
+        if not driver:
+            flash('Driver profile not found. Please contact admin.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Get assignment with order
+        assignment = db.session.query(
+            DriverAssignment,
+            Order
+        ).join(
+            Order, DriverAssignment.order_id == Order.id
+        ).filter(
+            DriverAssignment.id == assignment_id
+        ).first_or_404()
+        
+        assignment, order = assignment
+        
+        # Verify driver authorization
+        if assignment.driver_id != driver.id:
+            flash('You are not authorized to update this delivery.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Update assignment and order status
+        assignment.assignment_status = 'in_transit'  # Changed from 'picked_up' to 'in_transit' to match workflow
+        assignment.actual_pickup_time = datetime.utcnow()
+        order.order_status = 'in_transit'
+        
+        # Update driver status
+        driver.status = 'on_delivery'
+        driver.current_load_kg += assignment.weight_assigned_kg or 0
+        
+        # Create/update delivery step
+        pickup_step = DeliveryStep.query.filter_by(
+            order_id=order.id,
+            step_number=2  # Assuming step 2 is pickup
+        ).first()
+        
+        if not pickup_step:
+            pickup_step = DeliveryStep(
+                order_id=order.id,
+                step_number=2,
+                step_name='Picked Up',
+                status='completed',
+                completed_at=datetime.utcnow()
+            )
+            db.session.add(pickup_step)
+        else:
+            pickup_step.status = 'completed'
+            pickup_step.completed_at = datetime.utcnow()
+        
+        # Commit transaction
+        db.session.commit()
+        
+        # Log the status change
+        print(f"[PICKUP] Order {order.id} picked up by driver {driver.id}")
+        
+        flash('Order picked up successfully!', 'success')
+        return redirect(url_for('driver.delivery', assignment_id=assignment_id))
+        
+    except Exception as e:
+        # Rollback in case of error
+        db.session.rollback()
+        print(f"❌ Error in pickup route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash('Error updating pickup status. Please try again or contact support.', 'danger')
+        return redirect(url_for('driver.delivery', assignment_id=assignment_id))
 
 @bp.route('/delivery/<int:assignment_id>/deliver', methods=['POST'])
 @driver_required
 def mark_delivery(assignment_id):
-    assignment = DriverAssignment.query.get_or_404(assignment_id)
-    
-    assignment.assignment_status = 'delivered'
-    assignment.actual_delivery_time = datetime.utcnow()
-    assignment.order_rel.order_status = 'delivered'
-    
-    driver = assignment.driver
-    driver.current_load_kg -= assignment.weight_assigned_kg
-    driver.status = 'available'
-    driver.total_deliveries += 1
-    
-    db.session.commit()
-    
-    print(f"[MOCK EARNINGS] Driver {driver.user.name} earned ₹{assignment.weight_assigned_kg * 10}")
-    
-    flash('Delivery marked complete!', 'success')
-    return redirect(url_for('driver.dashboard'))
+    try:
+        # Start a transaction
+        db.session.begin()
+        
+        # Get driver profile
+        driver = Driver.query.filter_by(user_id=current_user.id).first()
+        if not driver:
+            flash('Driver profile not found. Please contact admin.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Get assignment with order
+        result = db.session.query(
+            DriverAssignment,
+            Order
+        ).join(
+            Order, DriverAssignment.order_id == Order.id
+        ).filter(
+            DriverAssignment.id == assignment_id
+        ).first_or_404()
+        
+        assignment, order = result
+        
+        # Verify driver authorization
+        if assignment.driver_id != driver.id:
+            flash('You are not authorized to complete this delivery.', 'danger')
+            return redirect(url_for('driver.dashboard'))
+        
+        # Update assignment and order status
+        assignment.assignment_status = 'delivered'
+        assignment.actual_delivery_time = datetime.utcnow()
+        order.order_status = 'delivered'
+        
+        # Update driver status and metrics
+        driver.current_load_kg -= assignment.weight_assigned_kg or 0
+        driver.status = 'available'  # Set driver as available for new assignments
+        driver.total_deliveries = (driver.total_deliveries or 0) + 1
+        
+        # Create/update delivery step for delivery completion
+        delivery_step = DeliveryStep.query.filter_by(
+            order_id=order.id,
+            step_number=4  # Assuming step 4 is delivery completion
+        ).first()
+        
+        if not delivery_step:
+            delivery_step = DeliveryStep(
+                order_id=order.id,
+                step_number=4,
+                step_name='Delivered',
+                status='completed',
+                completed_at=datetime.utcnow()
+            )
+            db.session.add(delivery_step)
+        else:
+            delivery_step.status = 'completed'
+            delivery_step.completed_at = datetime.utcnow()
+        
+        # Commit transaction
+        db.session.commit()
+        
+        # Log the delivery completion
+        print(f"[DELIVERY] Order {order.id} delivered by driver {driver.id}")
+        print(f"[EARNINGS] Driver {driver.user.name} earned ₹{assignment.weight_assigned_kg * 10 if assignment.weight_assigned_kg else 0}")
+        
+        flash('Delivery marked as complete successfully!', 'success')
+        return redirect(url_for('driver.dashboard'))
+        
+    except Exception as e:
+        # Rollback in case of error
+        db.session.rollback()
+        print(f"❌ Error in delivery completion route: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash('Error completing delivery. Please try again or contact support.', 'danger')
+        return redirect(url_for('driver.delivery', assignment_id=assignment_id))
 
 
 # ============ NEW LOCATION-BASED FEATURES ============
