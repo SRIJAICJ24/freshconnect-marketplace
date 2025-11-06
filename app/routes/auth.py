@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_login import login_user, logout_user, login_required
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
+from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import User, RetailerCredit
 
@@ -86,8 +86,31 @@ def login():
     return render_template('auth/login.html')
 
 @bp.route('/logout')
-@login_required
 def logout():
-    logout_user()
-    flash('Logged out successfully!', 'success')
-    return redirect(url_for('main.index'))
+    """Logout route - no @login_required to handle broken sessions"""
+    try:
+        # Get user name before logging out (if authenticated)
+        if current_user.is_authenticated:
+            user_name = current_user.name if hasattr(current_user, 'name') else 'User'
+            logout_user()
+            flash(f'Goodbye {user_name}! Logged out successfully!', 'success')
+            print(f"✅ User {user_name} logged out successfully")
+        else:
+            flash('Logged out successfully!', 'success')
+            print(f"✅ Session cleared (user was not authenticated)")
+        
+        # Clear session data
+        session.clear()
+        
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        print(f"❌ Logout error: {e}")
+        import traceback
+        traceback.print_exc()
+        # Force clear session even on error
+        try:
+            session.clear()
+        except:
+            pass
+        flash('Logged out!', 'success')
+        return redirect(url_for('auth.login'))
