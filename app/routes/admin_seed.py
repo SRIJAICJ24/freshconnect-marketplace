@@ -1,7 +1,7 @@
 """Admin route to seed complete database with all local data"""
 from flask import Blueprint, jsonify
 from app import db
-from app.models import User, Product, Driver, Vendor, Retailer, RetailerCredit
+from app.models import User, Product, Driver, RetailerCredit
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 
@@ -53,18 +53,9 @@ def full_import():
                 # Create role-specific profiles
                 if user_data['user_type'] == 'vendor':
                     vendor_map[user_data['email']] = user.id
-                    # Create vendor profile
-                    vendor = Vendor(
-                        user_id=user.id,
-                        business_name=user_data.get('business_name', user_data['name']),
-                        gst_number='DEMO' + str(user.id).zfill(10),
-                        shop_number=f'Shop-{user.id}',
-                        is_verified=True
-                    )
-                    db.session.add(vendor)
                     
                 elif user_data['user_type'] == 'retailer':
-                    # Create retailer profile (no separate table, but create credit record)
+                    # Create retailer credit record
                     credit = RetailerCredit(
                         retailer_id=user.id,
                         credit_score=500,
