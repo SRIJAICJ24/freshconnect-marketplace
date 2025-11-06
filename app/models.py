@@ -71,6 +71,12 @@ class Product(db.Model):
     minimum_quantity = db.Column(db.Float)
     minimum_weight = db.Column(db.Float)
     
+    # VENDOR COMPARISON FIELDS
+    freshness_level = db.Column(db.String(20), default='TODAY', index=True)  # TODAY, YESTERDAY, 2DAYS, 3DAYS
+    quality_tier = db.Column(db.String(20), default='GOOD', index=True)  # PREMIUM, GOOD, BUDGET
+    certification = db.Column(db.String(255))  # ORGANIC, FARM_FRESH, APEDA (comma-separated)
+    stock_quantity = db.Column(db.Float, default=0)  # Available stock for comparison
+    
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -571,3 +577,106 @@ class UserReport(db.Model):
     
     def __repr__(self):
         return f'<Report #{self.id}: {self.report_type} - {self.status}>'
+
+
+class VendorRatingsCache(db.Model):
+    """
+    Cached vendor ratings for fast comparison queries
+    Updated whenever new review is submitted
+    """
+    __tablename__ = 'vendor_ratings_cache'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    vendor_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False, index=True)
+    
+    # Rating components (from ProductReview aggregation)
+    avg_quality_rating = db.Column(db.Float, default=0.0)  # Average of rating_quality
+    avg_punctuality_rating = db.Column(db.Float, default=0.0)  # Average of rating_delay
+    avg_communication_rating = db.Column(db.Float, default=0.0)  # Average of rating_communication
+    overall_rating = db.Column(db.Float, default=0.0, index=True)  # Overall average
+    
+    # Performance metrics
+    total_reviews = db.Column(db.Integer, default=0)
+    success_rate = db.Column(db.Float, default=0.0)  # Percentage of successful orders
+    on_time_rate = db.Column(db.Float, default=0.0)  # Percentage of on-time deliveries
+    repeat_customer_rate = db.Column(db.Float, default=0.0)  # Percentage of repeat customers
+    
+    # Timestamps
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    vendor = db.relationship('User', backref='ratings_cache', foreign_keys=[vendor_id])
+    
+    def __repr__(self):
+        return f'<VendorRatingsCache vendor_id={self.vendor_id} rating={self.overall_rating}>'
+
+
+class VendorDeliveryMetrics(db.Model):
+    """
+    Cached delivery performance metrics for vendors
+    Updated after each delivery completion
+    """
+    __tablename__ = 'vendor_delivery_metrics'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    vendor_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False, index=True)
+    
+    # Delivery time metrics (in minutes)
+    avg_delivery_time = db.Column(db.Integer, default=0)  # Average time from order to delivery
+    min_delivery_time = db.Column(db.Integer, default=0)  # Fastest delivery
+    max_delivery_time = db.Column(db.Integer, default=0)  # Slowest delivery
+    
+    # Delivery performance counts
+    delivery_on_time_count = db.Column(db.Integer, default=0)  # Number of on-time deliveries
+    delivery_late_count = db.Column(db.Integer, default=0)  # Number of late deliveries
+    total_deliveries = db.Column(db.Integer, default=0)  # Total completed deliveries
+    
+    # Timestamps
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    vendor = db.relationship('User', backref='delivery_metrics', foreign_keys=[vendor_id])
+    
+    @property
+    def on_time_rate(self):
+        """Calculate on-time delivery rate as percentage"""
+        if self.total_deliveries == 0:
+            return 0.0
+        return round((self.delivery_on_time_count / self.total_deliveries) * 100, 2)
+    
+    def __repr__(self):
+        return f'<VendorDeliveryMetrics vendor_id={self.vendor_id} avg_time={self.avg_delivery_time}min>'
+
+
+class ProductComparison(db.Model):
+    """
+    Log of product comparisons made by retailers
+    Used for analytics and personalized recommendations
+    """
+    __tablename__ = 'product_comparison'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    comparison_id = db.Column(db.String(36), unique=True, nullable=False, index=True)  # UUID
+    
+    retailer_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    product_name = db.Column(db.String(100), nullable=False, index=True)  # e.g., "Tomato"
+    
+    # Vendors involved in comparison (JSON array)
+    vendors_compared = db.Column(db.Text, nullable=False)  # JSON: [123, 456, 789]
+    selected_vendor_id = db.Column(db.Integer, db.ForeignKey('users.id'))  # Vendor chosen after comparison
+    
+    # Comparison metadata
+    sort_preference = db.Column(db.String(50))  # price, rating, delivery, value
+    filters_applied = db.Column(db.Text)  # JSON: {min_price: 30, max_price: 50}
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Relationships
+    retailer = db.relationship('User', foreign_keys=[retailer_id], backref='product_comparisons')
+    selected_vendor = db.relationship('User', foreign_keys=[selected_vendor_id])
+    
+    def __repr__(self):
+        return f'<ProductComparison id={self.comparison_id} retailer={self.retailer_id}>'

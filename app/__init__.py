@@ -26,7 +26,7 @@ def create_app(config_name=None):
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     
     with app.app_context():
-        from app.routes import main, auth, vendor, retailer, driver, admin, api, payment, barcode, emergency, vendor_barcode, admin_inventory, order_tracking, reviews, reports, notifications, vision, voice, admin_seed
+        from app.routes import main, auth, vendor, retailer, driver, admin, api, payment, barcode, emergency, vendor_barcode, admin_inventory, order_tracking, reviews, reports, notifications, vision, voice, admin_seed, comparison
         
         app.register_blueprint(main.bp)
         app.register_blueprint(auth.bp)
@@ -46,6 +46,7 @@ def create_app(config_name=None):
         app.register_blueprint(notifications.bp)  # FEATURE 8: Emergency Notifications
         app.register_blueprint(vision.bp)  # FEATURE 2: Camera & Image Recognition
         app.register_blueprint(voice.bp)  # FEATURE 1: Voice Assistant (Tamil + English)
+        app.register_blueprint(comparison.bp)  # FEATURE 9: Vendor Comparison & Differentiation
         app.register_blueprint(admin_seed.bp)  # DATABASE SEEDING: Import local data to Railway
         
         try:
