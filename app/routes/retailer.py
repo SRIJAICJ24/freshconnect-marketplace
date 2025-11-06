@@ -83,39 +83,89 @@ def dashboard():
 def browse():
     try:
         print("🔍 Browse route called")
+        
+        # AUTO-MIGRATION: Try to add missing columns if needed
+        try:
+            from sqlalchemy import text, inspect
+            inspector = inspect(db.engine)
+            columns = [col['name'] for col in inspector.get_columns('products')]
+            
+            missing_columns = []
+            if 'freshness_level' not in columns:
+                missing_columns.append("ALTER TABLE products ADD COLUMN freshness_level VARCHAR(20) DEFAULT 'TODAY'")
+            if 'quality_tier' not in columns:
+                missing_columns.append("ALTER TABLE products ADD COLUMN quality_tier VARCHAR(20) DEFAULT 'GOOD'")
+            if 'certification' not in columns:
+                missing_columns.append("ALTER TABLE products ADD COLUMN certification VARCHAR(255)")
+            if 'stock_quantity' not in columns:
+                missing_columns.append("ALTER TABLE products ADD COLUMN stock_quantity FLOAT DEFAULT 0")
+            
+            if missing_columns:
+                print(f"⚠️ Missing columns detected, auto-migrating...")
+                with db.engine.connect() as conn:
+                    for sql in missing_columns:
+                        try:
+                            conn.execute(text(sql))
+                            conn.commit()
+                            print(f"✅ {sql[:50]}...")
+                        except Exception as col_error:
+                            print(f"⚠️ Column add warning: {col_error}")
+                print("✅ Auto-migration complete!")
+        except Exception as migrate_error:
+            print(f"⚠️ Auto-migration failed (continuing anyway): {migrate_error}")
+        
         category = request.args.get('category')
         search = request.args.get('search')
         
         print(f"   Category: {category}, Search: {search}")
         
-        # Build query with only basic fields
-        query = Product.query.filter_by(is_active=True)
+        # Build query with only SAFE fields (ones that definitely exist)
+        query = db.session.query(
+            Product.id,
+            Product.product_name,
+            Product.category,
+            Product.price,
+            Product.quantity,
+            Product.unit,
+            Product.vendor_id,
+            Product.image_filename,
+            Product.is_active
+        ).filter(Product.is_active == True)
         
         if category:
-            query = query.filter_by(category=category)
+            query = query.filter(Product.category == category)
         
         if search:
             query = query.filter(Product.product_name.ilike(f'%{search}%'))
         
-        print(f"   Executing query...")
-        products = query.all()
-        print(f"   Found {len(products)} products")
+        print(f"   Executing safe query...")
+        result = query.all()
+        print(f"   Found {len(result)} products")
+        
+        # Convert to product-like objects with safe defaults
+        products = []
+        for row in result:
+            product = type('Product', (), {})()
+            product.id = row.id
+            product.product_name = row.product_name
+            product.category = row.category
+            product.price = row.price
+            product.quantity = row.quantity
+            product.unit = row.unit
+            product.vendor_id = row.vendor_id
+            product.image_filename = row.image_filename
+            product.is_active = row.is_active
+            # Add safe defaults for new fields
+            product.freshness_level = 'TODAY'
+            product.quality_tier = 'GOOD'
+            product.stock_quantity = row.quantity
+            product.certification = None
+            products.append(product)
         
         categories = db.session.query(Product.category).distinct().all()
         print(f"   Found {len(categories)} categories")
+        print(f"   ✅ Rendering template with {len(products)} products...")
         
-        # Add default values for new fields if they don't exist
-        for product in products:
-            if not hasattr(product, 'freshness_level'):
-                product.freshness_level = 'TODAY'
-            if not hasattr(product, 'quality_tier'):
-                product.quality_tier = 'GOOD'
-            if not hasattr(product, 'stock_quantity'):
-                product.stock_quantity = product.quantity if hasattr(product, 'quantity') else 0
-            if not hasattr(product, 'certification'):
-                product.certification = None
-        
-        print(f"   ✅ Rendering template...")
         return render_template('retailer/browse.html',
                              products=products,
                              categories=[c[0] for c in categories])
@@ -125,13 +175,7 @@ def browse():
         import traceback
         traceback.print_exc()
         
-        # Try to give more helpful error message
-        error_msg = str(e)
-        if 'no such column' in error_msg.lower():
-            flash('Database needs migration. Please contact administrator.', 'warning')
-        else:
-            flash('Error loading products. Please try again.', 'danger')
-        
+        flash('Error loading products. Database may need updating.', 'danger')
         return redirect(url_for('retailer.dashboard'))
 
 @bp.route('/product/<int:product_id>')
