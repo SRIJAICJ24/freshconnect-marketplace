@@ -94,26 +94,29 @@ def browse():
         
         sql = """
             SELECT 
-                id, 
-                product_name, 
-                category, 
-                price, 
-                quantity, 
-                unit, 
-                vendor_id, 
-                image_filename
-            FROM products 
-            WHERE is_active = true
+                p.id, 
+                p.product_name, 
+                p.category, 
+                p.price, 
+                p.quantity, 
+                p.unit, 
+                p.vendor_id, 
+                p.image_filename,
+                u.name as vendor_name,
+                u.email as vendor_email
+            FROM products p
+            LEFT JOIN users u ON p.vendor_id = u.id
+            WHERE p.is_active = true
         """
         
         params = {}
         
         if category:
-            sql += " AND category = :category"
+            sql += " AND p.category = :category"
             params['category'] = category
         
         if search:
-            sql += " AND product_name ILIKE :search"
+            sql += " AND p.product_name ILIKE :search"
             params['search'] = f'%{search}%'
         
         print(f"   Executing ultra-safe SQL query...")
@@ -127,6 +130,13 @@ def browse():
         # Convert to simple product objects
         products = []
         for row in rows:
+            # Create vendor object
+            vendor = type('User', (), {})()
+            vendor.id = row[6]
+            vendor.name = row[8] if row[8] else 'Unknown Vendor'
+            vendor.email = row[9] if row[9] else ''
+            
+            # Create product object
             product = type('Product', (), {})()
             product.id = row[0]
             product.product_name = row[1]
@@ -136,6 +146,7 @@ def browse():
             product.unit = row[5]
             product.vendor_id = row[6]
             product.image_filename = row[7]
+            product.vendor = vendor  # Add vendor relationship
             product.is_active = True
             # Add safe defaults
             product.freshness_level = 'TODAY'
