@@ -12,9 +12,6 @@ bp = Blueprint('driver', __name__, url_prefix='/driver')
 @driver_required
 def dashboard():
     try:
-        # Start a transaction
-        db.session.begin()
-        
         # Get or create driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         
@@ -47,9 +44,6 @@ def dashboard():
             assignment_status='in_transit'
         ).count()
         
-        # Commit any pending transactions
-        db.session.commit()
-        
         return render_template('driver/dashboard.html',
                              driver=driver,
                              pending=pending,
@@ -68,9 +62,6 @@ def dashboard():
 @driver_required
 def assignments():
     try:
-        # Start a transaction
-        db.session.begin()
-        
         # Get driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         
@@ -91,27 +82,11 @@ def assignments():
             db.session.commit()
             print(f"✅ Created driver profile for user {current_user.id}")
         
-        # Get pending assignments with order and product details
-        pending_assignments = db.session.query(
-            DriverAssignment,
-            Order,
-            Product,
-            User
-        ).join(
-            Order, DriverAssignment.order_id == Order.id
-        ).join(
-            OrderItem, Order.id == OrderItem.order_id
-        ).join(
-            Product, OrderItem.product_id == Product.id
-        ).join(
-            User, Product.vendor_id == User.id
-        ).filter(
-            DriverAssignment.driver_id == driver.id,
-            DriverAssignment.assignment_status == 'assigned'
+        # Get pending assignments
+        pending_assignments = DriverAssignment.query.filter_by(
+            driver_id=driver.id,
+            assignment_status='assigned'
         ).all()
-        
-        # Commit transaction
-        db.session.commit()
         
         return render_template('driver/assignments.html', 
                              assignments=pending_assignments,
@@ -130,55 +105,35 @@ def assignments():
 @driver_required
 def delivery(assignment_id):
     try:
-        # Start a transaction
-        db.session.begin()
-        
         # Get driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         if not driver:
             flash('Driver profile not found. Please contact admin.', 'danger')
             return redirect(url_for('driver.dashboard'))
         
-        # Get assignment with order and vendor details
-        result = db.session.query(
-            DriverAssignment,
-            Order,
-            User
-        ).join(
-            Order, DriverAssignment.order_id == Order.id
-        ).join(
-            User, Order.seller_id == User.id
-        ).filter(
-            DriverAssignment.id == assignment_id
-        ).first_or_404()
-        
-        # Unpack the query result
-        assignment, order, vendor = result
+        # Get assignment
+        assignment = DriverAssignment.query.get_or_404(assignment_id)
         
         # Verify driver authorization
         if assignment.driver_id != driver.id:
             flash('You are not authorized to view this delivery.', 'danger')
             return redirect(url_for('driver.dashboard'))
         
-        # Get order items with product details
-        order_items = db.session.query(
-            OrderItem,
-            Product
-        ).join(
-            Product, OrderItem.product_id == Product.id
-        ).filter(
-            OrderItem.order_id == order.id
-        ).all()
+        # Get order
+        order = Order.query.get(assignment.order_id)
+        
+        # Get vendor
+        vendor = User.query.get(order.seller_id) if order else None
+        
+        # Get order items
+        order_items = OrderItem.query.filter_by(order_id=order.id).all() if order else []
         
         # Get delivery steps
         delivery_steps = DeliveryStep.query.filter_by(
             order_id=order.id
         ).order_by(
             DeliveryStep.step_number
-        ).all()
-        
-        # Commit transaction
-        db.session.commit()
+        ).all() if order else []
         
         return render_template('driver/delivery.html',
                             assignment=assignment,
@@ -201,34 +156,25 @@ def delivery(assignment_id):
 @driver_required
 def mark_pickup(assignment_id):
     try:
-        # Start a transaction
-        db.session.begin()
-        
         # Get driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         if not driver:
             flash('Driver profile not found. Please contact admin.', 'danger')
             return redirect(url_for('driver.dashboard'))
         
-        # Get assignment with order
-        assignment = db.session.query(
-            DriverAssignment,
-            Order
-        ).join(
-            Order, DriverAssignment.order_id == Order.id
-        ).filter(
-            DriverAssignment.id == assignment_id
-        ).first_or_404()
-        
-        assignment, order = assignment
+        # Get assignment
+        assignment = DriverAssignment.query.get_or_404(assignment_id)
         
         # Verify driver authorization
         if assignment.driver_id != driver.id:
             flash('You are not authorized to update this delivery.', 'danger')
             return redirect(url_for('driver.dashboard'))
         
+        # Get order
+        order = assignment.order_rel
+        
         # Update assignment and order status
-        assignment.assignment_status = 'in_transit'  # Changed from 'picked_up' to 'in_transit' to match workflow
+        assignment.assignment_status = 'in_transit'
         assignment.actual_pickup_time = datetime.utcnow()
         order.order_status = 'in_transit'
         
@@ -239,7 +185,7 @@ def mark_pickup(assignment_id):
         # Create/update delivery step
         pickup_step = DeliveryStep.query.filter_by(
             order_id=order.id,
-            step_number=2  # Assuming step 2 is pickup
+            step_number=2
         ).first()
         
         if not pickup_step:
@@ -277,31 +223,22 @@ def mark_pickup(assignment_id):
 @driver_required
 def mark_delivery(assignment_id):
     try:
-        # Start a transaction
-        db.session.begin()
-        
         # Get driver profile
         driver = Driver.query.filter_by(user_id=current_user.id).first()
         if not driver:
             flash('Driver profile not found. Please contact admin.', 'danger')
             return redirect(url_for('driver.dashboard'))
         
-        # Get assignment with order
-        result = db.session.query(
-            DriverAssignment,
-            Order
-        ).join(
-            Order, DriverAssignment.order_id == Order.id
-        ).filter(
-            DriverAssignment.id == assignment_id
-        ).first_or_404()
-        
-        assignment, order = result
+        # Get assignment
+        assignment = DriverAssignment.query.get_or_404(assignment_id)
         
         # Verify driver authorization
         if assignment.driver_id != driver.id:
             flash('You are not authorized to complete this delivery.', 'danger')
             return redirect(url_for('driver.dashboard'))
+        
+        # Get order
+        order = assignment.order_rel
         
         # Update assignment and order status
         assignment.assignment_status = 'delivered'
@@ -310,13 +247,13 @@ def mark_delivery(assignment_id):
         
         # Update driver status and metrics
         driver.current_load_kg -= assignment.weight_assigned_kg or 0
-        driver.status = 'available'  # Set driver as available for new assignments
+        driver.status = 'available'
         driver.total_deliveries = (driver.total_deliveries or 0) + 1
         
         # Create/update delivery step for delivery completion
         delivery_step = DeliveryStep.query.filter_by(
             order_id=order.id,
-            step_number=4  # Assuming step 4 is delivery completion
+            step_number=4
         ).first()
         
         if not delivery_step:
