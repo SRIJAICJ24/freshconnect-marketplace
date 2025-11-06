@@ -3,24 +3,54 @@
 {% block content %}
 <style>
     .driver-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
         color: white;
-        padding: 2rem;
-        border-radius: 15px;
+        padding: 2.5rem;
+        border-radius: 20px;
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-    }
-    
-    .stat-card {
-        border-radius: 15px;
-        border: none;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 20px 60px rgba(30, 60, 114, 0.4);
+        position: relative;
         overflow: hidden;
     }
     
+    .driver-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    
+    .stat-card {
+        border-radius: 20px;
+        border: none;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.4s;
+    }
+    
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card:hover::before {
+        opacity: 1;
     }
     
     .stat-icon {
@@ -48,12 +78,34 @@
     }
     
     .vehicle-icon {
-        font-size: 4rem;
-        color: #667eea;
-        opacity: 0.15;
+        font-size: 5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0.2;
         position: absolute;
         right: 20px;
         bottom: 10px;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .vehicle-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
     }
     
     .status-badge {
@@ -75,18 +127,46 @@
 <div class="container py-4">
     <!-- Welcome Header -->
     <div class="driver-header">
-        <div class="row align-items-center">
+        <div class="row align-items-center position-relative" style="z-index: 1;">
             <div class="col-md-8">
-                <h2 class="mb-2">
-                    <i class="fas fa-truck-moving"></i> Welcome, {{ current_user.name }}!
-                </h2>
+                <div class="mb-3">
+                    <span class="vehicle-badge">
+                        {% if driver.vehicle_type == 'bike' %}
+                        <i class="fas fa-motorcycle"></i>
+                        {% elif driver.vehicle_type == 'tempo' %}
+                        <i class="fas fa-truck"></i>
+                        {% elif driver.vehicle_type == 'truck' %}
+                        <i class="fas fa-truck-moving"></i>
+                        {% elif driver.vehicle_type == 'mini_truck' %}
+                        <i class="fas fa-truck-pickup"></i>
+                        {% else %}
+                        <i class="fas fa-car"></i>
+                        {% endif %}
+                        {{ driver.vehicle_type.replace('_', ' ').title() }} Driver
+                    </span>
+                </div>
+                <h1 class="mb-2 fw-bold">
+                    Welcome, {{ current_user.name }}! 👋
+                </h1>
+                <p class="mb-2 opacity-90">
+                    <i class="fas fa-id-badge me-2"></i>{{ driver.vehicle_registration }}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-calendar-day me-2"></i>{{ current_user.created_at.strftime('%B %d, %Y') }}
+                </p>
                 <p class="mb-0 opacity-75">
-                    <i class="fas fa-calendar-day"></i> {{ current_user.created_at.strftime('%B %d, %Y') }}
+                    <i class="fas fa-shipping-fast me-2"></i>{{ driver.total_deliveries or 0 }} Deliveries Completed
                 </p>
             </div>
             <div class="col-md-4 text-end">
-                <div class="status-badge bg-{{ 'success' if driver.status == 'available' else 'warning' }} text-white">
-                    <i class="fas fa-circle"></i> {{ driver.status.upper() }}
+                <div class="status-badge bg-{{ 'success' if driver.status == 'available' else 'warning' }} text-white mb-3">
+                    <i class="fas fa-circle pulse"></i> {{ driver.status.upper() }}
+                </div>
+                <div class="text-white opacity-90">
+                    <div class="mb-1">
+                        <i class="fas fa-star text-warning"></i>
+                        <strong class="ms-1">{{ driver.rating or 5.0 }}</strong>
+                        <small class="opacity-75">/5.0 Rating</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -152,39 +232,75 @@
             <div class="card info-card">
                 <div class="card-header bg-white border-0">
                     <h5 class="mb-0">
-                        <i class="fas fa-car text-primary"></i> Vehicle Information
+                        {% if driver.vehicle_type == 'bike' %}
+                        <i class="fas fa-motorcycle text-danger"></i>
+                        {% elif driver.vehicle_type == 'tempo' %}
+                        <i class="fas fa-truck text-info"></i>
+                        {% elif driver.vehicle_type == 'truck' %}
+                        <i class="fas fa-truck-moving text-primary"></i>
+                        {% elif driver.vehicle_type == 'mini_truck' %}
+                        <i class="fas fa-truck-pickup text-warning"></i>
+                        {% else %}
+                        <i class="fas fa-car text-success"></i>
+                        {% endif %}
+                        Vehicle Information
                     </h5>
                 </div>
                 <div class="card-body position-relative">
+                    {% if driver.vehicle_type == 'bike' %}
+                    <i class="fas fa-motorcycle vehicle-icon"></i>
+                    {% elif driver.vehicle_type == 'tempo' %}
                     <i class="fas fa-truck vehicle-icon"></i>
+                    {% elif driver.vehicle_type == 'truck' %}
+                    <i class="fas fa-truck-moving vehicle-icon"></i>
+                    {% elif driver.vehicle_type == 'mini_truck' %}
+                    <i class="fas fa-truck-pickup vehicle-icon"></i>
+                    {% else %}
+                    <i class="fas fa-car vehicle-icon"></i>
+                    {% endif %}
                     
                     <div class="row g-3">
-                        <div class="col-6">
-                            <small class="text-muted d-block">Type</small>
-                            <strong>{{ driver.vehicle_type.title() }}</strong>
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-truck-loading text-primary me-2"></i>
+                                    <strong>{{ driver.vehicle_type.replace('_', ' ').title() }}</strong>
+                                </div>
+                                <small class="text-muted">Registration: <strong>{{ driver.vehicle_registration }}</strong></small>
+                            </div>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted d-block">Registration</small>
-                            <strong>{{ driver.vehicle_registration }}</strong>
+                            <div class="text-center p-2 bg-light rounded">
+                                <i class="fas fa-weight-hanging text-success mb-1"></i>
+                                <div><small class="text-muted d-block">Max Capacity</small></div>
+                                <strong class="text-success">{{ driver.vehicle_capacity_kg or 50 }} kg</strong>
+                            </div>
                         </div>
                         <div class="col-6">
-                            <small class="text-muted d-block">Capacity</small>
-                            <strong>{{ driver.vehicle_capacity_kg or 50 }} kg</strong>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block">Current Load</small>
-                            <strong>{{ driver.current_load_kg or 0 }} kg</strong>
+                            <div class="text-center p-2 bg-light rounded">
+                                <i class="fas fa-boxes text-warning mb-1"></i>
+                                <div><small class="text-muted d-block">Current Load</small></div>
+                                <strong class="text-warning">{{ driver.current_load_kg or 0 }} kg</strong>
+                            </div>
                         </div>
                     </div>
                     
                     <div class="mt-3">
-                        <small class="text-muted d-block mb-2">Load Capacity</small>
-                        <div class="progress" style="height: 8px; border-radius: 10px;">
-                            <div class="progress-bar bg-success progress-bar-animated" role="progressbar" 
-                                 style="width: {{ ((driver.current_load_kg or 0) / (driver.vehicle_capacity_kg or 50) * 100) }}%">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted fw-bold">Load Capacity</small>
+                            <small class="badge bg-primary">{{ ((driver.current_load_kg or 0) / (driver.vehicle_capacity_kg or 50) * 100)|round(1) }}%</small>
+                        </div>
+                        <div class="progress" style="height: 12px; border-radius: 10px; background-color: #e9ecef;">
+                            {% set load_percent = ((driver.current_load_kg or 0) / (driver.vehicle_capacity_kg or 50) * 100) %}
+                            <div class="progress-bar progress-bar-striped progress-bar-animated 
+                                        {% if load_percent < 50 %}bg-success{% elif load_percent < 80 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" style="width: {{ load_percent }}%">
                             </div>
                         </div>
-                        <small class="text-muted">{{ ((driver.current_load_kg or 0) / (driver.vehicle_capacity_kg or 50) * 100)|round(1) }}% loaded</small>
+                        <small class="text-muted mt-1 d-block">
+                            <i class="fas fa-info-circle"></i> 
+                            Available: {{ (driver.vehicle_capacity_kg or 50) - (driver.current_load_kg or 0) }} kg
+                        </small>
                     </div>
                 </div>
             </div>
