@@ -43,53 +43,70 @@ def create_review(order_id):
         rating_quality = request.form.get('rating_quality', type=int)
         rating_delay = request.form.get('rating_delay', type=int)
         rating_communication = request.form.get('rating_communication', type=int)
+        driver_rating = request.form.get('driver_rating', type=int)  # Optional driver rating
         comment = request.form.get('comment', '').strip()
         
         # Validate ratings
         if not all([rating_quality, rating_delay, rating_communication]):
-            flash('Please provide all ratings', 'danger')
-            return redirect(url_for('reviews.create_review', order_id=order_id))
+            flash('Please provide all vendor ratings', 'danger')
+            return redirect(url_for('retailer.orders'))
         
         if not all(1 <= r <= 5 for r in [rating_quality, rating_delay, rating_communication]):
             flash('Ratings must be between 1 and 5', 'danger')
-            return redirect(url_for('reviews.create_review', order_id=order_id))
+            return redirect(url_for('retailer.orders'))
         
-        if existing_review:
-            # Update existing review
-            existing_review.rating_quality = rating_quality
-            existing_review.rating_delay = rating_delay
-            existing_review.rating_communication = rating_communication
-            existing_review.comment = comment
-            existing_review.edited_at = datetime.utcnow()
-            message = 'Review updated successfully!'
-        else:
-            # Create new review
-            review = ProductReview(
-                order_id=order_id,
-                product_id=order.items[0].product_id if order.items else None,
-                retailer_id=current_user.id,
-                vendor_id=order.seller_id,
-                driver_id=order.assigned_driver_id,
-                rating_quality=rating_quality,
-                rating_delay=rating_delay,
-                rating_communication=rating_communication,
-                comment=comment,
-                created_at=datetime.utcnow()
-            )
-            db.session.add(review)
-            message = 'Review submitted successfully! Thank you for your feedback.'
+        # Validate driver rating if provided
+        if driver_rating and not (1 <= driver_rating <= 5):
+            flash('Driver rating must be between 1 and 5', 'danger')
+            return redirect(url_for('retailer.orders'))
         
-        # Update vendor's average rating
-        update_user_ratings(order.seller_id)
-        
-        # Update driver's rating if assigned
-        if order.assigned_driver_id:
-            update_user_ratings(order.assigned_driver_id)
-        
-        db.session.commit()
-        
-        flash(message, 'success')
-        return redirect(url_for('retailer.orders'))
+        try:
+            if existing_review:
+                # Update existing review
+                existing_review.rating_quality = rating_quality
+                existing_review.rating_delay = rating_delay
+                existing_review.rating_communication = rating_communication
+                existing_review.driver_rating = driver_rating if driver_rating else existing_review.driver_rating
+                existing_review.comment = comment
+                existing_review.edited_at = datetime.utcnow()
+                message = 'Review updated successfully!'
+            else:
+                # Create new review
+                review = ProductReview(
+                    order_id=order_id,
+                    product_id=order.items[0].product_id if order.items else None,
+                    retailer_id=current_user.id,
+                    vendor_id=order.seller_id,
+                    driver_id=order.assigned_driver_id,
+                    rating_quality=rating_quality,
+                    rating_delay=rating_delay,
+                    rating_communication=rating_communication,
+                    driver_rating=driver_rating,  # Add driver rating
+                    comment=comment,
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(review)
+                message = 'Review submitted successfully! Thank you for your feedback.'
+            
+            # Update vendor's average rating
+            update_user_ratings(order.seller_id)
+            
+            # Update driver's rating if assigned and rated
+            if order.assigned_driver_id and driver_rating:
+                update_user_ratings(order.assigned_driver_id)
+            
+            db.session.commit()
+            
+            flash(message, 'success')
+            return redirect(url_for('retailer.orders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"❌ Error submitting review: {e}")
+            import traceback
+            traceback.print_exc()
+            flash('Error submitting review. Please try again.', 'danger')
+            return redirect(url_for('retailer.orders'))
     
     return render_template('reviews/create_review.html',
                          order=order,
@@ -193,21 +210,25 @@ def update_user_ratings(user_id):
     # Get all reviews for this user
     if user.user_type == 'vendor':
         reviews = ProductReview.query.filter_by(vendor_id=user_id).all()
+        # Calculate average of vendor ratings (quality, delay, communication)
+        total_ratings = []
+        for review in reviews:
+            avg = (review.rating_quality + review.rating_delay + review.rating_communication) / 3
+            total_ratings.append(avg)
+            
     elif user.user_type == 'driver':
-        reviews = ProductReview.query.filter_by(driver_id=user_id).all()
+        reviews = ProductReview.query.filter_by(driver_id=user_id).filter(
+            ProductReview.driver_rating.isnot(None)
+        ).all()
+        # Calculate average of driver ratings
+        total_ratings = [review.driver_rating for review in reviews if review.driver_rating]
     else:
         return
     
-    if not reviews:
+    if not total_ratings:
         user.average_rating = 0.0
         user.total_reviews = 0
         return
-    
-    # Calculate average of all three rating types
-    total_ratings = []
-    for review in reviews:
-        avg = (review.rating_quality + review.rating_delay + review.rating_communication) / 3
-        total_ratings.append(avg)
     
     user.average_rating = round(sum(total_ratings) / len(total_ratings), 2)
     user.total_reviews = len(reviews)

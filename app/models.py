@@ -508,6 +508,7 @@ class ProductReview(db.Model):
     rating_communication = db.Column(db.Integer)  # Communication quality
     
     # Driver-specific ratings
+    driver_rating = db.Column(db.Integer)  # Overall driver rating (simplified)
     driver_rating_handling = db.Column(db.Integer)  # Careful handling
     driver_rating_punctuality = db.Column(db.Integer)  # On-time delivery
     driver_rating_communication = db.Column(db.Integer)  # Communication
@@ -539,13 +540,21 @@ class UserReport(db.Model):
     
     # Who is reporting
     report_from_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)  # Alias for consistency
     
     # Who is being reported
     report_against_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    reported_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)  # Alias for consistency
+    
+    # Order reference (optional)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), index=True)
     
     # Report details
-    report_type = db.Column(db.String(50), nullable=False)  # fraud, poor_quality, late_delivery, rude_behavior, damaged_items, other
+    report_type = db.Column(db.String(50), nullable=False)  # vendor, driver, fraud, poor_quality, etc.
+    subject = db.Column(db.String(200))  # Report subject/title
     report_text = db.Column(db.Text, nullable=False)
+    description = db.Column(db.Text)  # Alias for report_text
+    severity = db.Column(db.String(20), default='medium')  # low, medium, high
     evidence_attachment = db.Column(db.String(255))  # Image/file path
     
     # Status tracking

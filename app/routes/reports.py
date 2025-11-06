@@ -13,6 +13,70 @@ from datetime import datetime
 bp = Blueprint('reports', __name__, url_prefix='/reports')
 
 
+@bp.route('/submit/<int:order_id>', methods=['POST'])
+@login_required
+def submit_report(order_id):
+    """Submit a report from order page modal"""
+    try:
+        order = Order.query.get_or_404(order_id)
+        
+        # Verify user is buyer of this order
+        if order.buyer_id != current_user.id:
+            flash('Unauthorized action', 'danger')
+            return redirect(url_for('retailer.orders'))
+        
+        report_type = request.form.get('report_type')  # 'vendor' or 'driver'
+        issue_category = request.form.get('issue_category')
+        description = request.form.get('description', '').strip()
+        severity = request.form.get('severity', 'medium')
+        
+        # Validate
+        if not all([report_type, issue_category, description]):
+            flash('Please fill all required fields', 'danger')
+            return redirect(url_for('retailer.orders'))
+        
+        # Determine reported user
+        if report_type == 'vendor':
+            reported_user_id = order.seller_id
+            subject = f"Issue with Vendor: {issue_category.replace('_', ' ').title()}"
+        elif report_type == 'driver':
+            if not order.assigned_driver_id:
+                flash('No driver assigned to this order', 'danger')
+                return redirect(url_for('retailer.orders'))
+            reported_user_id = order.assigned_driver_id
+            subject = f"Issue with Driver: {issue_category.replace('_', ' ').title()}"
+        else:
+            flash('Invalid report type', 'danger')
+            return redirect(url_for('retailer.orders'))
+        
+        # Create report
+        report = UserReport(
+            reporter_id=current_user.id,
+            reported_user_id=reported_user_id,
+            order_id=order_id,
+            report_type=report_type,
+            subject=subject,
+            description=f"[{severity.upper()}] {issue_category.replace('_', ' ').title()}\n\n{description}",
+            severity=severity,
+            status='pending',
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(report)
+        db.session.commit()
+        
+        flash(f'Report submitted successfully against {report_type}. Admin will review it soon.', 'success')
+        return redirect(url_for('retailer.orders'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error submitting report: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error submitting report. Please try again.', 'danger')
+        return redirect(url_for('retailer.orders'))
+
+
 @bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_report():
