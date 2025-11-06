@@ -2,11 +2,19 @@
 Product Comparison & Vendor Differentiation API Routes
 """
 
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from flask_login import login_required, current_user
-from app.comparison_service import ProductComparisonService
-from app.models import Product, VendorRatingsCache
+from app.models import Product
 from app import db
+
+# Try to import comparison service, but don't break if tables don't exist yet
+try:
+    from app.comparison_service import ProductComparisonService
+    from app.models import VendorRatingsCache
+    COMPARISON_ENABLED = True
+except Exception as e:
+    print(f"⚠️ Comparison service not available yet: {e}")
+    COMPARISON_ENABLED = False
 
 bp = Blueprint('comparison', __name__, url_prefix='/api/comparison')
 
@@ -29,6 +37,12 @@ def search_products():
         }
     }
     """
+    if not COMPARISON_ENABLED:
+        return jsonify({
+            'success': False,
+            'message': 'Comparison service not available yet. Please run database migration first.'
+        }), 503
+    
     try:
         data = request.get_json()
         product_name = data.get('product_name', '').strip()

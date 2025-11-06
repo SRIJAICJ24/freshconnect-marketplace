@@ -81,23 +81,30 @@ def dashboard():
 @bp.route('/browse')
 @retailer_required
 def browse():
-    category = request.args.get('category')
-    search = request.args.get('search')
-    
-    query = Product.query.filter_by(is_active=True)
-    
-    if category:
-        query = query.filter_by(category=category)
-    
-    if search:
-        query = query.filter(Product.product_name.ilike(f'%{search}%'))
-    
-    products = query.all()
-    categories = db.session.query(Product.category).distinct().all()
-    
-    return render_template('retailer/browse.html',
-                         products=products,
-                         categories=[c[0] for c in categories])
+    try:
+        category = request.args.get('category')
+        search = request.args.get('search')
+        
+        query = Product.query.filter_by(is_active=True)
+        
+        if category:
+            query = query.filter_by(category=category)
+        
+        if search:
+            query = query.filter(Product.product_name.ilike(f'%{search}%'))
+        
+        products = query.all()
+        categories = db.session.query(Product.category).distinct().all()
+        
+        return render_template('retailer/browse.html',
+                             products=products,
+                             categories=[c[0] for c in categories])
+    except Exception as e:
+        print(f"❌ Browse error: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Error loading products. Please try again.', 'danger')
+        return redirect(url_for('retailer.dashboard'))
 
 @bp.route('/product/<int:product_id>')
 @retailer_required
