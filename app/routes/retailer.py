@@ -82,9 +82,13 @@ def dashboard():
 @retailer_required
 def browse():
     try:
+        print("🔍 Browse route called")
         category = request.args.get('category')
         search = request.args.get('search')
         
+        print(f"   Category: {category}, Search: {search}")
+        
+        # Build query with only basic fields
         query = Product.query.filter_by(is_active=True)
         
         if category:
@@ -93,17 +97,41 @@ def browse():
         if search:
             query = query.filter(Product.product_name.ilike(f'%{search}%'))
         
+        print(f"   Executing query...")
         products = query.all()
-        categories = db.session.query(Product.category).distinct().all()
+        print(f"   Found {len(products)} products")
         
+        categories = db.session.query(Product.category).distinct().all()
+        print(f"   Found {len(categories)} categories")
+        
+        # Add default values for new fields if they don't exist
+        for product in products:
+            if not hasattr(product, 'freshness_level'):
+                product.freshness_level = 'TODAY'
+            if not hasattr(product, 'quality_tier'):
+                product.quality_tier = 'GOOD'
+            if not hasattr(product, 'stock_quantity'):
+                product.stock_quantity = product.quantity if hasattr(product, 'quantity') else 0
+            if not hasattr(product, 'certification'):
+                product.certification = None
+        
+        print(f"   ✅ Rendering template...")
         return render_template('retailer/browse.html',
                              products=products,
                              categories=[c[0] for c in categories])
     except Exception as e:
         print(f"❌ Browse error: {e}")
+        print(f"   Error type: {type(e).__name__}")
         import traceback
         traceback.print_exc()
-        flash('Error loading products. Please try again.', 'danger')
+        
+        # Try to give more helpful error message
+        error_msg = str(e)
+        if 'no such column' in error_msg.lower():
+            flash('Database needs migration. Please contact administrator.', 'warning')
+        else:
+            flash('Error loading products. Please try again.', 'danger')
+        
         return redirect(url_for('retailer.dashboard'))
 
 @bp.route('/product/<int:product_id>')

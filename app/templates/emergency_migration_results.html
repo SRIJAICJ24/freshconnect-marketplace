@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Migration Results</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .container {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff00;
+        }
+        h1 {
+            color: #00ff00;
+            text-align: center;
+        }
+        .result {
+            padding: 10px;
+            margin: 5px 0;
+            background: #1a1a1a;
+            border-left: 3px solid #00ff00;
+        }
+        .success { border-left-color: #00ff00; color: #00ff00; }
+        .info { border-left-color: #00bfff; color: #00bfff; }
+        .warning { border-left-color: #ffaa00; color: #ffaa00; }
+        .error { border-left-color: #ff0000; color: #ff0000; }
+        .actions {
+            margin-top: 30px;
+            text-align: center;
+        }
+        a {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #00ff00;
+            color: #1e1e1e;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        a:hover {
+            background: #00dd00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 Migration Results</h1>
+        
+        {% for result in results %}
+            {% if '✅' in result %}
+                <div class="result success">{{ result }}</div>
+            {% elif 'ℹ️' in result %}
+                <div class="result info">{{ result }}</div>
+            {% elif '⚠️' in result %}
+                <div class="result warning">{{ result }}</div>
+            {% elif '❌' in result %}
+                <div class="result error">{{ result }}</div>
+            {% else %}
+                <div class="result">{{ result }}</div>
+            {% endif %}
+        {% endfor %}
+        
+        <div class="actions">
+            <a href="{{ url_for('retailer.browse') }}">📦 Try Browse Products</a>
+            <a href="{{ url_for('retailer.dashboard') }}">🏠 Dashboard</a>
+            <a href="{{ url_for('auth.logout') }}">🚪 Logout</a>
+        </div>
+    </div>
+</body>
+</html>
