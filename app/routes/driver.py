@@ -31,6 +31,34 @@ def dashboard():
             db.session.add(driver)
             db.session.commit()
             print(f"✅ Created driver profile for user {current_user.id}")
+        else:
+            # Ensure all required fields have default values (for old drivers)
+            updated = False
+            if not driver.vehicle_type:
+                driver.vehicle_type = 'bike'
+                updated = True
+            if not driver.vehicle_registration:
+                driver.vehicle_registration = f'TN-00-XX-{str(driver.id).zfill(4)}'
+                updated = True
+            if driver.vehicle_capacity_kg is None:
+                driver.vehicle_capacity_kg = 50
+                updated = True
+            if driver.current_load_kg is None:
+                driver.current_load_kg = 0
+                updated = True
+            if not driver.status:
+                driver.status = 'available'
+                updated = True
+            if driver.rating is None:
+                driver.rating = 5.0
+                updated = True
+            if driver.total_deliveries is None:
+                driver.total_deliveries = 0
+                updated = True
+            
+            if updated:
+                db.session.commit()
+                print(f"✅ Updated driver profile with missing fields for user {current_user.id}")
         
         # Get pending assignments count
         pending = DriverAssignment.query.filter_by(
@@ -52,11 +80,19 @@ def dashboard():
     except Exception as e:
         # Rollback in case of error
         db.session.rollback()
-        print(f"❌ Driver dashboard error: {str(e)}")
+        print(f"❌ Driver dashboard error for user {current_user.id}: {str(e)}")
         import traceback
         traceback.print_exc()
-        flash('Error loading dashboard. Please try again or contact support.', 'danger')
-        return redirect(url_for('main.index'))
+        
+        # Show detailed error message
+        error_msg = f'Dashboard error: {str(e)[:100]}'
+        flash(error_msg, 'danger')
+        flash('Try using one of the new comprehensive driver accounts instead!', 'info')
+        
+        # Return a simple error page
+        return render_template('error.html', 
+                             code=500,
+                             message='Driver dashboard could not load. Please try logging in with a comprehensive driver account (e.g., rajesh.bike@freshconnect.com).'), 500
 
 @bp.route('/assignments')
 @driver_required
