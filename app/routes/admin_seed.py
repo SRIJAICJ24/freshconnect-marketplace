@@ -222,9 +222,9 @@ def seed_comprehensive_drivers():
                     phone=driver_data['phone'],
                     user_type='driver',
                     password_hash=generate_password_hash('driver123'),
-                    is_verified=True,
                     address='Koyambedu Market, Chennai',
-                    city='Chennai'
+                    city='Chennai',
+                    is_active=True
                 )
                 db.session.add(user)
                 db.session.flush()
